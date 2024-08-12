@@ -1,0 +1,20 @@
+
+//nb dock
+4
+//capacite de stockage de l'entrepot
+100
+//table des temps de transports
+0.002 0.00475 0.01275 0.01
+0.00475 0.002 0.01 0.01275
+0.01275 0.01 0.002 0.00475
+0.01 0.01275 0.00475 0.002
+table des couts de transports
+0.0 5.5 21.5 16.0
+5.5 0.0 16.0 21.5
+21.5 16.0 0.0 5.5
+16.0 21.5 5.5 0.0
+//ID des quais
+quai 1
+quai 2
+quai 3
+quai 4

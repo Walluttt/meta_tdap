@@ -1,0 +1,594 @@
+# =============================================================================
+# solveur TDAP (depuis la generation d'une instance jusqu'a sa resolution)
+#
+# Hypotheses pour l'instance et la resolution :
+#  - topologie du terminal inspiree d'une structure existante
+#  - flotte de vehicules composee de 2 types de camions (3 et 6 essieux)
+#  - camions entrants (livre des palettes) de type 6 essieux
+#  - camions sortants (emporte les palettes) de type 3 essieux
+#  - palettes manutentionnees par chariot elevateurs
+#  - palettes recues conditionnees pour etre expediees (pas de recombinaison de palettes)
+#  - palettes non-livrees retournent avec le camion entrant correspondant
+
+using Luxor, PyPlot   # pour les dessins
+using Random, Distributions # pour les chargements et fenetres de temps 
+using JuMP, Gurobi
+
+include("dataTerminal.jl")
+include("graphiques.jl")
+include("timeWindows.jl")
+include("ventilationCamions.jl")
+
+mutable struct Camion
+    numero     :: Int64
+    hArr       :: Float64
+    hDep       :: Float64
+    nPalettes  :: Vector{Int64}
+end
+
+# === Parametres ==============================================================
+
+# nombre de quais du terminal (nombre obligatoirement pair)
+m = 8#14
+
+# vitesse (km/h) moyenne des engins de levage 
+vitesse = 5  # 5km/h en moyenne 
+
+# Nombre et chargement max des camions a 3 essieux
+nbrMaxCamions3essieux = 12#20
+nbrMaxPalettesCamions3essieux = 16
+
+# Nombre et chargement max des camions a 6 essieux
+nbrMaxCamions6essieux = 6#8
+nbrMaxPalettesCamions6essieux = 40
+
+# Nombre maximum de palettes a considerer
+nbrMaxPalettes = 240#320
+
+# === Calcul des donnees relatives au terminal ================================
+dist = [4.0 9.5 15.0 20.5 36.5 31.0 25.5 20.0; 9.5 4.0 9.5 15.0 31.0 25.5 20.0 25.5; 15.0 9.5 4.0 9.5 25.5 20.0 25.5 31.0; 20.5 15.0 9.5 4.0 20.0 25.5 31.0 36.5; 36.5 31.0 25.5 20.0 4.0 9.5 15.0 20.5; 31.0 25.5 20.0 25.5 9.5 4.0 9.5 15.0; 25.5 20.0 25.5 31.0 15.0 9.5 4.0 9.5; 20.0 25.5 31.0 36.5 20.5 15.0 9.5 4.0]
+temps = [0.002 0.00475 0.0075 0.01025 0.01825 0.0155 0.01275 0.01; 0.00475 0.002 0.00475 0.0075 0.0155 0.01275 0.01 0.01275; 0.0075 0.00475 0.002 0.00475 0.01275 0.01 0.01275 0.0155; 0.01025 0.0075 0.00475 0.002 0.01 0.01275 0.0155 0.01825; 0.01825 0.0155 0.01275 0.01 0.002 0.00475 0.0075 0.01025; 0.0155 0.01275 0.01 0.01275 0.00475 0.002 0.00475 0.0075; 0.01275 0.01 0.01275 0.0155 0.0075 0.00475 0.002 0.00475; 0.01 0.01275 0.0155 0.01825 0.01025 0.0075 0.00475 0.002]
+
+chargementCamions3essieux = [7, 15, 9, 16, 14, 11, 9]
+chargementCamions6essieux = [40, 19, 22]
+f = [0 0 0 0 8 2 10 5 7 8; 0 0 0 2 0 6 6 0 4 1; 0 0 0 5 7 1 0 9 0 0; 0 0 0 0 0 0 0 0 0 0; 0 0 0 0 0 0 0 0 0 0; 0 0 0 0 0 0 0 0 0 0; 0 0 0 0 0 0 0 0 0 0; 0 0 0 0 0 0 0 0 0 0; 0 0 0 0 0 0 0 0 0 0; 0 0 0 0 0 0 0 0 0 0]
+
+println("\nChargement initial des camions 6 essieux :", chargementCamions6essieux)
+println("\nChargement final des camions 3 essieux   :", chargementCamions3essieux)
+
+Camions3essieux = Camion[Camion(1, 9.01, 9.99, [7]), Camion(2, 11.88, 13.13, [15]), Camion(3, 9.82, 10.87, [9]), Camion(4, 11.7, 12.98, [16]), Camion(5, 10.94, 12.16, [14]), Camion(6, 13.71, 14.83, [11]), Camion(7, 10.9, 11.95, [9])]
+Camions6essieux = Camion[Camion(1, 8.41, 9.99, [40]), Camion(2, 11.53, 12.41, [19]), Camion(3, 12.96, 13.94, [22])]
+
+
+traceFenetresTempsCamionsCharges(Camions3essieux, Camions6essieux, chargementCamions6essieux, f)
+
+
+# --- given parameters --------------------------------------------------------
+
+# number of trucks / nombre de camions
+nbrCamions3essieux = length(chargementCamions3essieux)
+nbrCamions6essieux = length(chargementCamions6essieux)
+n = nbrCamions3essieux+nbrCamions6essieux
+
+# number of docks / nombre de quais 
+#m = 4 
+
+# operational cost per unit time from dock k to dock l 
+c = dist.-4.0
+#=
+c = [0.0 10.0 20.0 10.0; 
+    10.0 0.0 10.0 20.0; 
+    20.0 10.0 0.0 10.0;
+    10.0 20.0 10.0 0.0]
+=#
+
+# operational time for pallets from dock k to dock l  (in minutes, 0<=minutes<=59)
+t = temps
+  
+
+# penalty cost per unit cargo from truck i to truck j
+p = fill(100,n,n)
+for i in 1:n
+    p[i,i]=0
+end
+
+# number of pallets transferring from truck i to truck j 
+
+
+# capacity of the cross dock terminal (maximum number of cargos the cross dock can hold at a time)
+C = 100 
+
+a = []
+d = []
+for i in 1:length(Camions6essieux)
+    push!(a,Camions6essieux[i].hArr)
+    push!(d,Camions6essieux[i].hDep)
+end 
+for i in 1:length(Camions3essieux)
+    push!(a,Camions3essieux[i].hArr)
+    push!(d,Camions3essieux[i].hDep)
+end 
+
+
+# arrival time of truck i (in hour.minutes, 0<=hour<=23, 0<=minutes<=59)
+#a = [12.40, 09.10, 09.10, 14.30, 10.12, 08.25]
+# departure time of truck i
+#d = [17.13, 16.10, 14.00, 17.53, 16.05, 13.10]
+
+# --- built parameters --------------------------------------------------------
+
+# 1 iff truck i departs no later than truck j arrives, 0 otherwise
+δ=zeros(Int64,n,n)  
+
+for i=1:n, j=1:n
+    if i!=j
+        if d[i] <= a[j]
+            δ[i,j] = 1
+        end
+    end
+end
+
+@show δ
+
+# time corresponding to arrivals and departures, merged and sorted
+tr = sort(vcat(a,d))
+
+atr = Vector{Int64}[]
+for r=1:2*n
+    println("r = $r")
+    v = (Int64)[]
+    for i=1:n
+        print("  $(a[i])  $(tr[r]) : ")
+        if a[i]<=tr[r]
+            println("$i")
+            push!(v,i)
+        else
+            println(" ")
+        end
+    end
+    push!(atr,v)
+end
+
+dtr = Vector{Int64}[]
+for r=1:2*n
+    println("r = $r")
+    v = (Int64)[]
+    for j=1:n
+        print("  $(d[j])  $(tr[r]) : ")
+        if d[j]<=tr[r]
+            println("$j")
+            push!(v,j)            
+        else
+            println(" ")
+        end
+    end
+    push!(dtr,v)
+end
+
+@show atr
+@show dtr
+
+# -----------------------------------------------------------------------------
+
+# --- formulation introduced by Gelareh et al. in 2016 modif XG ---------------------------
+
+mod = Model(Gurobi.Optimizer)
+
+# variables: 1 if truck i is assigned to dock k, 0 otherwise 
+@variable(mod, y[1:n,1:m], Bin)
+
+# variables: 1 if truck i is assigned to dock k and truck j to dock l, 0 otherwise
+@variable(mod, z[1:n,1:n,1:m,1:m], Bin)
+#@assert false "stop"
+# objective: total operational cost + total penalty cost
+@objective(mod, Min, #sum(c[k,l] * t[k,l] * z[i,j,k,l] for i=1:n, j=1:n, k=1:m, l=1:m)
+                     #+
+                     sum( (sum( p[i,j] * f[i,j] * ( 1 - sum( z[i,j,k,l] for k=1:m, l=1:m) ) for j=1:n) ) for i=1:n)
+          )
+
+# contrainte sur obj 1 :
+@constraint(mod, cstF1, sum(1000 * t[k,l] * z[i,j,k,l] for i=1:n, j=1:n, k=1:m, l=1:m) <= 45)   
+
+# constraint (2)          
+@constraint(mod, cst2_[i=1:n], sum(y[i,k] for k=1:m) <= 1) 
+
+# constraint (3) 
+@constraint(mod, cst3_[i=1:n, j=1:n, k=1:m, l=1:m], z[i,j,k,l] <= y[i,k])
+
+# constraint (4) 
+@constraint(mod, cst4_[i=1:n, j=1:n, k=1:m, l=1:m], z[i,j,k,l] <= y[j,l])
+
+# constraint (5) 
+@constraint(mod, cst5_[i=1:n, j=1:n, k=1:m; i!=j], y[i,k] + y[j,k] <= 1 + δ[i,j] + δ[j,i])
+
+# constraint (6) 
+@constraint(mod, cst6_[i=1:n, j=1:n, k=1:m; i!=j],z[i,j,k,k] <= δ[i,j] )
+
+# constraint (7) 
+@constraint(mod, cst7_[r=1:2*n], sum(f[i,j] * z[i,j,k,l] for i in atr[r], j=1:n, k=1:m, l=1:m)
+                                 - 
+                                 sum(f[i,j] * z[i,j,k,l] for i=1:n, j in dtr[r], k=1:m, l=1:m)
+                                 <= C
+            )
+
+# constraint (8) 
+@constraint(mod, cst8_[i=1:n, j=1:n, k=1:m, l=1:m; i!=j && (d[j] - a[i] -  f[i,j] * t[k,l])<=0 ],  z[i,j,k,l] == 0)
+
+
+# --- Resolution --------------------------------------------------------
+
+optimize!(mod)
+
+# --- Results --------------------------------------------------------
+
+global cout = 0
+global penalite = 0
+
+if termination_status(mod) == OPTIMAL
+    println("\nOptimal value of the objective function: ", objective_value(mod))
+
+    for i=1:n, j=1:n, k=1:m, l=1:m
+        global cout =  cout + c[k,l] * t[k,l] * value(z[i,j,k,l])
+    end
+    println("  -> total operational cost :", cout)
+
+    for i=1:n
+        for j=1:n
+            global som = 0
+            for k=1:m, l=1:m
+                som = som + value(z[i,j,k,l])
+            end
+            global penalite = penalite + p[i,j] * f[i,j] * (1-som)
+        end
+    end
+    println("  -> total penalty cost :", penalite)
+
+
+    println("\nAssignment truck to dock:")
+    for i=1:n,k=1:m
+         if value.(y[i,k])==1
+              println("  truck $i ⟶ dock $k | arrival: ", a[i]," ⟶ departure: ", d[i])
+         end
+    end
+
+    println("\nFeasible transferts of pallet(s):")
+    for i=1:n, j=1:n, k=1:m, l=1:m
+         if value.(z[i,j,k,l])==1
+              print("i=$i j=$j k=$k l=$l :   between truck/dock ($i,$k) and truck/dock ($j,$l)")
+              if f[i,j]>0
+                println(" -> ", f[i,j], " pallet(s)")
+              else
+                println(" ")
+              end
+         end
+    end
+end   
+
+
+yOpt=copy(value.(y)) 
+
+# Activity at the docks
+println("\nActivity at the docks: ")
+trucksAtDock = [findall(>(0.0),yOpt[:,k]) for k in 1:m]
+for k in 1:m
+    print("  dock $k :")
+    for i in trucksAtDock[k]
+        print("truck $i at [$(a[i]),$(d[i])]  ")
+        for j in trucksAtDock[k]
+            if i!=j
+                if !(d[i]<=a[j] || d[j]<=a[i])
+                    println("no valid solution: conflict between truck $i and truck $j at dock $k")
+                    @assert false "no valid solution: conflict between truck $i and truck $j at dock $k"
+                end
+            end
+        end
+    end
+    println(" ")
+end
+println(" ")
+
+# Assignment trucks to docks
+println("Assignment of the trucks: ")
+assignmentTruckDock = [findfirst(>(0.0),yOpt[i,:]) for i in 1:n]
+for i in 1:n
+    k = assignmentTruckDock[i]
+    if k == nothing
+        print("  truck $i NOT ASSIGNED")
+    else
+        print("  truck $i to dock $k at [$(a[i]),$(d[i])]")
+        for j in 1:n
+            if i!=j
+                l = assignmentTruckDock[j]
+                if k==l 
+                    if d[i]<=a[j] || d[j]<=a[i]
+                        print(" + truck $j at [$(a[j]),$(d[j])]")
+                    else
+                        println("no valid solution: conflict between truck $i and truck $j at dock $k")
+                        @assert false "no valid solution: conflict between truck $i and truck $j at dock $k"
+                    end
+                end
+            end
+        end
+    end
+
+    println(" ")
+end
+
+
+println("\nDrawing the transferts of pallet(s):")
+
+#Drawing(1000,1000,"Cross-Dock.png")
+long=193; larg=100; echelle = 2
+
+
+function traceFlux(quaiDep::Int64, quaiArr::Int64, nbrQuai::Int64)
+
+    if quaiDep <= Int(nbrQuai/2)
+
+        # cas ou le quai de depart est dans la premiere moitie des quais
+        println("quai depart au nord")
+
+        if quaiDep == 1
+            sethue("blue")
+        elseif quaiDep == 2
+            sethue("red3")
+        elseif quaiDep == 3
+            sethue("green")
+        elseif quaiDep == 4
+            sethue("darkgoldenrod")
+        elseif quaiDep == 5
+            sethue("orangered3") 
+        elseif quaiDep == 6
+            sethue("turquoise3") 
+        elseif quaiDep == 7
+            sethue("blueviolet")                      
+        end 
+
+        if quaiArr <= Int(nbrQuai/2)
+            # vers un quai du meme cote du terminal 
+            pt0 = Point(-173+(quaiDep-1)*55+3*2(quaiDep-1),-90)
+            pt1 = Point(-173+(quaiDep-1)*55+3*2(quaiDep-1),-70+3*(quaiDep-1))
+            i = quaiArr   
+            pt2 = Point(-173+(i-1)*55+3*2(quaiDep-1),-70+3*(quaiDep-1))
+            pt3 = Point(-173+(i-1)*55+3*2(quaiDep-1),-90)
+            poly([pt0, pt1, pt2, pt3], :stroke)
+            Luxor.arrow(pt2, pt3, arrowheadlength=8, arrowheadangle=pi/8, linewidth=.3)
+        else
+            # vers un quai de l'autre cote du terminal 
+            pt0 = Point(-173+(quaiDep-1)*55+3*2(quaiDep-1),-90)
+            pt1 = Point(-173+(quaiDep-1)*55+3*2(quaiDep-1),-70+3*(quaiDep-1))
+            i = nbrQuai-quaiArr+1
+            pt2 = Point(-173+(i-1)*55+3*2(quaiDep-1),-70+3*(quaiDep-1))
+            pt3 = Point(-173+(i-1)*55+3*2(quaiDep-1),90)
+            poly([pt0, pt1, pt2, pt3], :stroke)
+            Luxor.arrow(pt2, pt3, arrowheadlength=8, arrowheadangle=pi/8, linewidth=.3)
+        end     
+    
+    else
+
+        # cas ou le quai de depart est dans la seconde moitie des quais
+        println("quai depart au sud")  
+
+        quaiDep = nbrQuai-quaiDep+1 
+        if quaiDep == 1
+            sethue("royalblue1")
+        elseif quaiDep == 2
+            sethue("indianred1")
+        elseif quaiDep == 3
+            sethue("chartreuse")
+        elseif quaiDep == 4
+            sethue("gold")
+        elseif quaiDep == 5
+            sethue("orangered1") 
+        elseif quaiDep == 6
+            sethue("cyan") 
+        elseif quaiDep == 7
+            sethue("magenta")                      
+        end
+
+        if quaiArr > Int(nbrQuai/2)
+            # vers un quai du meme cote du terminal 
+            #quaiDep = nbrQuai-quaiDep+1 
+            pt0 = Point(-173+(quaiDep-1)*55+3*2(quaiDep-1)+3,90)
+            pt1 = Point(-173+(quaiDep-1)*55+3*2(quaiDep-1)+3,70-3*(quaiDep-1))
+            i = nbrQuai-quaiArr+1
+            if quaiDep!=i  
+                pt2 = Point(-173+(i-1)*55+3*2(quaiDep-1)+3,70-3*(quaiDep-1))
+                pt3 = Point(-173+(i-1)*55+3*2(quaiDep-1)+3,90)
+                poly([pt0, pt1, pt2, pt3], :stroke)
+                Luxor.arrow(pt2, pt3, arrowheadlength=8, arrowheadangle=pi/8, linewidth=.3)
+            end
+
+        else
+            # vers un quai de l'autre cote du terminal  
+            #quaiDep = nbrQuai-quaiDep+1       
+            pt0 = Point(-173+(quaiDep-1)*55+3*2(quaiDep-1)+3,90)
+            pt1 = Point(-173+(quaiDep-1)*55+3*2(quaiDep-1)+3,70-3*(quaiDep-1))
+            i = quaiArr
+            pt2 = Point(-173+(i-1)*55+3*2(quaiDep-1)+3,70-3*(quaiDep-1))
+            pt3 = Point(-173+(i-1)*55+3*2(quaiDep-1)+3,-90)
+            poly([pt0, pt1, pt2, pt3], :stroke)
+            Luxor.arrow(pt2, pt3, arrowheadlength=8, arrowheadangle=pi/8, linewidth=.3)
+        end
+    
+    end     
+
+    return nothing
+end
+
+
+println("\nDrawing transferts of pallet(s):")
+@png begin
+
+    # pose le fond de l'image du terminal -------------------------------------
+    nbrQuai = m
+    sethue("black")
+    rect(-200,-100,(10+17.5*Int(nbrQuai/2)+10*(Int(nbrQuai/2)-1))*echelle,larg*echelle, :stroke)
+    for i in 1:Int(nbrQuai/2)
+        sethue("black")
+        rect(-245+i*55, -106, 17*echelle, 6*echelle, :fill)
+        rect(-245+i*55, 94,   17*echelle, 6*echelle, :fill)
+        sethue("white")
+        label = string(i)
+        textcentered(label, -245+i*55+8*echelle, -97)
+        label = string(nbrQuai-i+1)
+        textcentered(label, -245+i*55+8*echelle, 103)
+    end 
+
+    #sethue("black")
+
+    for i=1:n, j=1:n, k=1:m, l=1:m
+        if value.(z[i,j,k,l])==1
+             print("i=$i j=$j k=$k l=$l :   between truck/dock ($i,$k) and truck/dock ($j,$l)")
+             if f[i,j]>0
+               println(" -> ", f[i,j], " pallet(s)")
+               traceFlux(Int(k),Int(l),nbrQuai)
+             else
+               println(" ")
+             end
+        end
+    end
+ 
+end
+
+# ==========================================
+# Represente l'evolution de la charge du terminal en nombre de palettes
+
+for r=1:2*n
+    sommeIN = 0
+    for i in atr[r], j=1:n, k=1:m, l=1:m
+        if value.(z[i,j,k,l])==1
+            sommeIN+=f[i,j]
+            println("i=$i j=$j k=$k l=$l :   entree de ",f[i,j]," palettes between truck/dock ($i,$k) and truck/dock ($j,$l)")
+        end
+    end
+    sommeOUT = 0
+    for i=1:n, j in dtr[r], k=1:m, l=1:m
+        if value.(z[i,j,k,l])==1
+            sommeOUT+=f[i,j]
+            println("i=$i j=$j k=$k l=$l :   sortie de ",f[i,j]," palettes between truck/dock ($i,$k) and truck/dock ($j,$l)")
+        end
+    end    
+    println("au temps r=$r on a $sommeIN palettes entrees le terminal")
+    println("                   $sommeOUT palettes sorties du terminal")
+    println("              soit ", sommeIN-sommeOUT," palettes ≤ $C\n")    
+end
+
+
+function hourStr(hourFloat)
+    hhStr = string(floor(Int,hourFloat))
+    mmStr = string(round(Int,(hourFloat-floor(hourFloat))*60))
+    if length(mmStr)==1
+         mmStr = "0" * mmStr
+    end
+    return hhStr * ":" * mmStr
+end
+
+x=[hourStr(tr[i]) for i in 1:length(tr)]
+y1 = zeros(Int,length(tr))
+y2 = zeros(Int,length(tr))
+y3 = zeros(Int,length(tr))
+y4 = zeros(Int,length(tr))
+y5 = zeros(Int,length(tr))
+y6 = zeros(Int,length(tr))
+y7 = zeros(Int,length(tr))
+y8 = zeros(Int,length(tr))
+for r=1:2*n
+    for i in atr[r], j=1:n, k=1:m, l=1:m
+        if value.(z[i,j,k,l])==1
+            if i == 1
+                y1[r] += f[i,j]
+            elseif i==2
+                y2[r] += f[i,j]
+            elseif i==3
+                y3[r] += f[i,j] 
+            elseif i==4
+                y4[r] += f[i,j]    
+            elseif i==5
+                y5[r] += f[i,j]  
+            elseif i==6
+                y6[r] += f[i,j]     
+            elseif i==7
+                y7[r] += f[i,j]    
+            elseif i==8
+                y8[r] += f[i,j]
+            end
+            #println("i=$i j=$j k=$k l=$l :   entree de ",f[i,j]," palettes between truck/dock ($i,$k) and truck/dock ($j,$l)")
+        end
+    end
+    for i=1:n, j in dtr[r], k=1:m, l=1:m
+        if value.(z[i,j,k,l])==1
+            if i == 1
+                y1[r] -= f[i,j]
+            elseif i==2
+                y2[r] -= f[i,j]
+            elseif i==3
+                y3[r] -= f[i,j] 
+            elseif i==4
+                y4[r] -= f[i,j]    
+            elseif i==5
+                y5[r] -= f[i,j]  
+            elseif i==6
+                y6[r] -= f[i,j]     
+            elseif i==7
+                y7[r] -= f[i,j]    
+            elseif i==8
+                y8[r] -= f[i,j]
+            end           
+            #println("i=$i j=$j k=$k l=$l :   sortie de ",f[i,j]," palettes between truck/dock ($i,$k) and truck/dock ($j,$l)")
+        end
+    end    
+end
+
+xticks(ha="right")
+bar(x, y1, color="blue")
+bar(x, y2, bottom=y1, color="red")
+bar(x, y3, bottom=y1+y2, color="green")
+bar(x, y4, bottom=y1+y2+y3, color="orange")
+bar(x, y5, bottom=y1+y2+y3+y4, color="magenta")
+bar(x, y6, bottom=y1+y2+y3+y4+y5, color="turquoise")
+bar(x, y7, bottom=y1+y2+y3+y4+y5+y6, color="blueviolet")
+bar(x, y8, bottom=y1+y2+y3+y4+y5+y6+y7, color="chocolate")
+xlabel("heure")
+ylabel("nombre de palettes")
+title("Evolution du nombre de palettes dans le terminal")
+
+
+
+global f1 = 0.0
+for i=1:n, j=1:n, k=1:m, l=1:m
+    global f1 +=  c[k,l] * t[k,l] * value.(z[i,j,k,l])
+end
+
+global f2 = 0.0
+for i=1:n, j=1:n
+    f2interne = 0.0
+
+    for k=1:m, l=1:m
+        f2interne +=  value.(z[i,j,k,l])
+    end
+
+    global f2 +=  p[i,j] * f[i,j] * ( 1 - f2interne)
+end
+
+@show f1
+@show f2
+
+global f1 = 0.0
+for i=1:n, j=1:n, k=1:m, l=1:m
+    global f1 +=  1000 * t[k,l] * value.(z[i,j,k,l])
+end
+
+global f2 = 0.0
+for i=1:n, j=1:n
+    f2interne = 0.0
+
+    for k=1:m, l=1:m
+        f2interne +=  value.(z[i,j,k,l])
+    end
+
+    global f2 +=  f[i,j] * ( 1 - f2interne)
+end
+
+@show f1
+@show f2
