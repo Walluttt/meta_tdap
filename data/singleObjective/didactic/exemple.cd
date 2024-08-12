@@ -1,0 +1,14 @@
+//beta [0.6;0.9], c(k,l) [1;4], C = beta * sum of all f(i,j)
+//nb docks
+2
+//capacit� de stockage de l'entrep�t
+500
+//table des temps de transports
+1 1 
+1 1 
+//table des co�ts de transports
+1.0 1.0  
+1.0 1.0 
+//ID des quais
+quai 0
+quai 1
