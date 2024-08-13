@@ -1,0 +1,131 @@
+Formulation M : solution non valide car affectation sur meme quai de camions pas presents au meme moment
+
+julia> include("TDAP_main.jl")
+
+instance <<< data_10_3_0 >>>
+
+  number of trucks...... 10
+  number of docks....... 3
+  maximum capacity ..... 813
+
+  arrival and departure time of trucks in minutes in [00:00;23:59] (hh.mm):
+      1   1046 (17:26)   1097 (18:17) 
+      2   1034 (17:14)   1097 (18:17) 
+      3   1155 (19:15)   1220 (20:20) 
+      4   1110 (18:30)   1156 (19:16) 
+      5   1187 (19:47)   1249 (20:49) 
+      6   1004 (16:44)   1056 (17:36) 
+      7   1155 (19:15)   1221 (20:21) 
+      8   1167 (19:27)   1219 (20:19) 
+      9    972 (16:12)   1020 (17:00) 
+     10    982 (16:22)   1041 (17:21) 
+
+  operational times (minutes) from k to l:
+      0   1   4
+      1   0   3
+      4   3   0
+
+  number of pallets to transfert from i to j:
+      .   .   .   .  33   .   .  58   .   .
+      .   .  36   .   .   .   9   .   .   .
+      .   .   .   8  50   .  34   .   .   .
+      .   .   8   .  52   .  48  37   .   .
+      .   .  24   .   .   .   6   .   .   .
+      .   .  41   .  23   .   .  14   .  54
+      .   .  21  56  31   .   .  33   .   .
+      .   .  51   .  59   .  32   .   .   .
+      .   .  49   .  54   .  31   .   .   .
+      .   .  24   9  55   .   .  50   .   .
+
+  transportation cost (€) from k to l:
+      0   1   1
+      1   0   2
+      1   2   0
+
+  penalities (€) from i to j:
+      .   .   .   .   8   .   .   9   .   .
+      .   .   8   .   .   .   9   .   .   .
+      .   .   .   8   8   .  10   .   .   .
+      .   .   9   .   8   .  11  10   .   .
+      .   .   8   .   .   .   8   .   .   .
+      .   .   9   .  10   .   .  11   .   8
+      .   .  11   9  11   .   .  10   .   .
+      .   .  10   .   8   .  11   .   .   .
+      .   .   9   .   8   .   8   .   .   .
+      .   .   8  11   9   .   .   8   .   .
+
+  1 iff truck i departs no later than truck j arrives, 0 otherwise:
+      0   0   1   1   1   0   1   1   0   0
+      0   0   1   1   1   0   1   1   0   0
+      0   0   0   0   0   0   0   0   0   0
+      0   0   0   0   1   0   0   1   0   0
+      0   0   0   0   0   0   0   0   0   0
+      0   0   1   1   1   0   1   1   0   0
+      0   0   0   0   0   0   0   0   0   0
+      0   0   0   0   0   0   0   0   0   0
+      1   1   1   1   1   0   1   1   0   0
+      1   0   1   1   1   0   1   1   0   0
+
+  Arrivals and departures of trucks at a time marker:
+      1     972 (16:12)    [9]     Int64[]
+      2     982 (16:22)    [9, 10]     Int64[]
+      3    1004 (16:44)    [6, 9, 10]     Int64[]
+      4    1020 (17:00)    [6, 9, 10]     [9]
+      5    1034 (17:14)    [2, 6, 9, 10]     [9]
+      6    1041 (17:21)    [2, 6, 9, 10]     [9, 10]
+      7    1046 (17:26)    [1, 2, 6, 9, 10]     [9, 10]
+      8    1056 (17:36)    [1, 2, 6, 9, 10]     [6, 9, 10]
+      9    1097 (18:17)    [1, 2, 6, 9, 10]     [1, 2, 6, 9, 10]
+     10    1097 (18:17)    [1, 2, 6, 9, 10]     [1, 2, 6, 9, 10]
+     11    1110 (18:30)    [1, 2, 4, 6, 9, 10]     [1, 2, 6, 9, 10]
+     12    1155 (19:15)    [1, 2, 3, 4, 6, 7, 9, 10]     [1, 2, 6, 9, 10]
+     13    1155 (19:15)    [1, 2, 3, 4, 6, 7, 9, 10]     [1, 2, 6, 9, 10]
+     14    1156 (19:16)    [1, 2, 3, 4, 6, 7, 9, 10]     [1, 2, 4, 6, 9, 10]
+     15    1167 (19:27)    [1, 2, 3, 4, 6, 7, 8, 9, 10]     [1, 2, 4, 6, 9, 10]
+     16    1187 (19:47)    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]     [1, 2, 4, 6, 9, 10]
+     17    1219 (20:19)    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]     [1, 2, 4, 6, 8, 9, 10]
+     18    1220 (20:20)    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]     [1, 2, 3, 4, 6, 8, 9, 10]
+     19    1221 (20:21)    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]     [1, 2, 3, 4, 6, 7, 8, 9, 10]
+     20    1249 (20:49)    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+ 
+  Optimal solution found:
+    CPUTime consumed: 4.077 sec
+
+    zOptimal................ 3163
+      -> operational cost... 160
+      -> penalty cost....... 3003
+
+    Assigment truck to dock:
+      truck  1 ⟶  dock  1 | arrival: 1046 (17:26) ⟶  departure: 1097 (18:17)
+      truck  2 ⟶  dock  2 | arrival: 1034 (17:14) ⟶  departure: 1097 (18:17)
+      truck  3 ⟶  dock  2 | arrival: 1155 (19:15) ⟶  departure: 1220 (20:20)
+      truck  4 ⟶  dock  1 | arrival: 1110 (18:30) ⟶  departure: 1156 (19:16)
+      truck  5 ⟶  dock  1 | arrival: 1187 (19:47) ⟶  departure: 1249 (20:49)
+      truck  6 ⟶  dock  3 | arrival: 1004 (16:44) ⟶  departure: 1056 (17:36)
+      truck  8 ⟶  dock  3 | arrival: 1167 (19:27) ⟶  departure: 1219 (20:19)
+      truck  9 ⟶  dock  2 | arrival:  972 (16:12) ⟶  departure: 1020 (17:00)
+      truck 10 ⟶  dock  1 | arrival:  982 (16:22) ⟶  departure: 1041 (17:21)
+
+    Transfert of pallets:
+      truck  1 ⟶  truck  5   from   dock  1 ⟶  dock  1
+      truck  1 ⟶  truck  8   from   dock  1 ⟶  dock  3
+      truck  2 ⟶  truck  3   from   dock  2 ⟶  dock  2
+      truck  3 ⟶  truck  4   from   dock  2 ⟶  dock  1
+      truck  3 ⟶  truck  5   from   dock  2 ⟶  dock  1
+      truck  4 ⟶  truck  3   from   dock  1 ⟶  dock  2
+      truck  4 ⟶  truck  5   from   dock  1 ⟶  dock  1
+      truck  4 ⟶  truck  8   from   dock  1 ⟶  dock  3
+      truck  5 ⟶  truck  3   from   dock  1 ⟶  dock  2
+      truck  6 ⟶  truck  3   from   dock  3 ⟶  dock  2
+      truck  6 ⟶  truck  5   from   dock  3 ⟶  dock  1
+      truck  6 ⟶  truck  8   from   dock  3 ⟶  dock  3
+      truck  6 ⟶  truck 10   from   dock  3 ⟶  dock  1
+      truck  8 ⟶  truck  3   from   dock  3 ⟶  dock  2
+      truck  8 ⟶  truck  5   from   dock  3 ⟶  dock  1
+      truck  9 ⟶  truck  3   from   dock  2 ⟶  dock  2
+      truck  9 ⟶  truck  5   from   dock  2 ⟶  dock  1
+      truck 10 ⟶  truck  3   from   dock  1 ⟶  dock  2
+      truck 10 ⟶  truck  4   from   dock  1 ⟶  dock  1
+      truck 10 ⟶  truck  5   from   dock  1 ⟶  dock  1
+      truck 10 ⟶  truck  8   from   dock  1 ⟶  dock  3
+    Number of transferts achieved: 21

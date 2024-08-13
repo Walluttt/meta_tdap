@@ -71,7 +71,7 @@ function processingInstance(instance::Instance)
 
     n = instance.n  # n number of trucks
     m = instance.m  # m number of docks
-    tr = Float64[]
+    tr = Int64[]
     append!(tr, instance.a, instance.d)
     sort!(tr)
 

@@ -15,17 +15,17 @@ function loadTDAP_singleObjective(path::String, fname::String)
     readline(file)                    # line skipped
     m = parse.(Int, readline(file))   # the number of dock (m)
     readline(file)                    # line skipped
-    C = parse.(Int, readline(file))   # the stockage capacity value (C)
+    C = parse.(Int, readline(file))   # the stockage capacity value (C, in number of pallets)
     readline(file)                    # line skipped
 
-    t = Matrix{Float64}(undef, m, m)  # the operational times (t)
+    t = Matrix{Int64}(undef, m, m)  # the operational times (t, in minutes)
     for i=1:m
-        t[i,:] = parse.(Float64, split(readline(file))) * 0.01 
+        t[i,:] = Int.(parse.(Float64, split(readline(file))))
     end
 
     readline(file)                    # line skipped
 
-    c = Matrix{Float64}(undef, m, m)  # the transportation cost (c)
+    c = Matrix{Int64}(undef, m, m)    # the transportation cost (c, in €)
     for i=1:m
         c[i,:] = Int.(parse.(Float64, split(readline(file))))
     end
@@ -43,12 +43,12 @@ function loadTDAP_singleObjective(path::String, fname::String)
     n = parse.(Int, readline(file))   # the number of trucks (n)
     readline(file)                    # line skipped
 
-    a = Vector{Float64}(undef, n)     # the arrival (a) and departure (d) times
-    d = Vector{Float64}(undef, n)
+    a = Vector{Int64}(undef, n)       # the arrival (a) and departure (d) times (in minutes ∈ [00:00;23:59])
+    d = Vector{Int64}(undef, n)
     for i=1:n
         line = split(readline(file))
-        a[i] = parse(Float64, split(line[1], ":")[1]) + 0.01 * parse(Float64, split(line[1], ":")[2])
-        d[i] = parse(Float64, split(line[2], ":")[1]) + 0.01 * parse(Float64, split(line[2], ":")[2])
+        a[i] = parse(Int64, split(line[1], ":")[1]) * 60  +  parse(Int64, split(line[1], ":")[2])
+        d[i] = parse(Int64, split(line[2], ":")[1]) * 60  +  parse(Int64, split(line[2], ":")[2])
     end
 
     readline(file)                    # line skipped
@@ -59,14 +59,14 @@ function loadTDAP_singleObjective(path::String, fname::String)
     readline(file)                    # line skipped    
 
     f = zeros(Int64, n, n)            # number of pallets (f), integer
-    p = zeros(Float64, n, n)          # penality (p), float
+    p = zeros(Int64, n, n)            # penality (p), integer (€)
     while ! eof(file)
         line = split(readline(file))
 
         ida = parse(Int, line[1]) + 1 # id truck arrival
         idd = parse(Int, line[2]) + 1 # id truck departure
 
-        f[ida, idd] = parse(Float64, line[3])
+        f[ida, idd] = parse(Int64, line[3])
         p[ida, idd] = Int(parse(Float64, line[4]))
     end
 
