@@ -94,11 +94,14 @@ mod = Model(GLPK.Optimizer)
 # variables: 1 if truck i is assigned to dock k and truck j to dock l, 0 otherwise
 @variable(mod, z[1:n,1:n,1:m,1:m], Bin)
 
+# expression: total operational cost
+@expression(mod, cost, sum(c[k,l] * t[k,l] * z[i,j,k,l] for i=1:n, j=1:n, k=1:m, l=1:m))
+
+# expression: total penalty cost
+@expression(mod, penality, sum( (sum( p[i,j] * f[i,j] * ( 1 - sum( z[i,j,k,l] for k=1:m, l=1:m) ) for j=1:n) ) for i=1:n))
+
 # objective: total operational cost + total penalty cost
-@objective(mod, Min, sum(c[k,l] * t[k,l] * z[i,j,k,l] for i=1:n, j=1:n, k=1:m, l=1:m)
-                     +
-                     sum( (sum( p[i,j] * f[i,j] * ( 1 - sum( z[i,j,k,l] for k=1:m, l=1:m) ) for j=1:n) ) for i=1:n)
-          )
+@objective(mod, Min, cost + penality)
 
 # constraint (1)          
 @constraint(mod, cst1_[i=1:n], sum(y[i,k] for k=1:m) <= 1) 
@@ -131,16 +134,16 @@ optimize!(mod)
 
 # --- Results --------------------------------------------------------
 
-global cout = 0
-global penalite = 0
+global cost = 0
+global penality = 0
 
 if termination_status(mod) == OPTIMAL
     println("Optimal value of the objective function: ", objective_value(mod))
 
     for i=1:n, j=1:n, k=1:m, l=1:m
-        global cout =  cout + c[k,l] * t[k,l] * value(z[i,j,k,l])
+        global cost =  cost + c[k,l] * t[k,l] * value(z[i,j,k,l])
     end
-    println("  -> total operational cost :", cout)
+    println("  -> total operational cost :", cost)
 
     for i=1:n
         for j=1:n
@@ -148,10 +151,10 @@ if termination_status(mod) == OPTIMAL
             for k=1:m, l=1:m
                 som = som + value(z[i,j,k,l])
             end
-            global penalite = penalite + p[i,j] * f[i,j] * (1-som)
+            global penality = penality + p[i,j] * f[i,j] * (1-som)
         end
     end
-    println("  -> total penalty cost :", penalite)
+    println("  -> total penalty cost :", penality)
 
 
     println("Assigment truck to dock:")
