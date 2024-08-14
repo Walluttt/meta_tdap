@@ -1,0 +1,24 @@
+//delta 70, f(i,j) [6;60], a(i) current date + [1; n*delta/m], d(i) a(i)+[45;74], p(i,j) [8;12]
+//nb camion
+5
+//temps d'arriv� et d�part par camion
+17:26 18:17
+17:14 18:17
+19:15 20:20
+18:30 19:16
+19:47 20:49
+//ID des camions
+camion 5
+camion 4
+camion 3
+camion 2
+camion 1
+//table de cargos des camions
+//camion_amenant camion_prenant quantit� p�nalit�
+3 4 52 8.0
+3 2 8 9.0
+4 2 24 8.0
+0 4 33 8.0
+1 2 36 8.0
+2 3 8 8.0
+2 4 50 8.0

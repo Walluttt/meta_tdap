@@ -8,12 +8,17 @@ include("TDAP_display.jl")
 include("TDAP_processingInstance.jl")
 include("TDAP_formulations.jl")
 include("TDAP_graphics.jl")
+include("TDAP_tools.jl")
 
 # -----------------------------------------------------------------------------
 #path = "../../data/singleObjective/didactic/"
 #file = "exemple"
+#file = "contreexempleM"
+
 path = "../../data/singleObjective/singleObjectiveGelareh2016/data_10_3/"
-file = "data_10_3_0"
+file = "data_10_3_4"
+#path = "../../data/singleObjective/singleObjectiveGelareh2016/data_12_4/"
+#file = "data_12_4_2"
 
 # -----------------------------------------------------------------------------
 instance = loadTDAP_singleObjective(path, file)
@@ -36,12 +41,9 @@ t_formulationM = time()-start
 # -----------------------------------------------------------------------------
 if termination_status(mod) == OPTIMAL
     displayOptimalSolution(t_formulationM, mod, instance)
-    @assert solution_checkerM(instance, δ, tr, mod) "Fatal error!!!"
+    @assert solution_checkerM(instance, δ, tr, mod) "Fatal error (with the formulation M) !!!"
+    @assert solution_checkerValues(instance, mod) "Fatal error (optimal solution no valid) !!!"
 else
     @assert false "No optimal solution found!!!"
 end
-
-#if instance.d[j] > instance.a[i] && instance.a[j] < instance.d[i]
-#    println(" erreur: intersection non vide")
-#end
 

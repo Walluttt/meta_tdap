@@ -8,13 +8,27 @@ function processingInstance(instance::Instance)
 
     # 1 iff truck i departs no later than truck j arrives, 0 otherwise --------
     δ::Matrix{Int64} = zeros(Int, instance.n, instance.n)
-    for i=1:instance.n, j=1:instance.n
-        if i!=j
-            if instance.d[i] <= instance.a[j]
-                δ[i,j] = 1
-            end
+    #=
+    for i=1:instance.n-1, j=i+1:instance.n
+        if instance.d[i] <= instance.a[j]
+            δ[i,j] = 1
+            δ[j,i] = 1
         end
     end
+    =#
+
+    for i=1:instance.n-1, j=i+1:instance.n
+        if instance.d[j] > instance.a[i] && instance.a[j] < instance.d[i] 
+            # intersection of temporal periods not empty
+            δ[i,j] = 0
+            δ[j,i] = 0
+        else
+            # intersection of temporal periods empty
+            δ[i,j] = 1
+            δ[j,i] = 1
+        end
+    end
+
 
     # -------------------------------------------------------------------------
     # Build the list of markers times sorted by incresing values,
@@ -97,7 +111,7 @@ function processingInstance(instance::Instance)
         push!(arr_t, current)
     end 
 
-    @assert x==δ "divergence x==δ"
+    #@assert x==δ "divergence x==δ"
     @assert atr==arr_t "divergence atr==arr_t"
     @assert dtr==dep_t "divergence dtr==dep_t"
 

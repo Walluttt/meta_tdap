@@ -160,12 +160,16 @@ function displayOptimalSolution(t_elapsed::Float64, mod::Model, instance::Instan
     print("    ")
     println("Assigment truck to dock:")
 
-    for i=1:n, k=1:m
-         if value.(mod[:y][i,k])==1
+    y = copy(value.(mod[:y]))
+    for i=1:n
+        k = findfirst(isequal(1),y[i,:])
+        if  typeof(k) != Nothing
             HHa, MMa = convertMinutesHHMM(instance.a[i])
             HHd, MMd = convertMinutesHHMM(instance.d[i])
             @printf("      truck %2d ⟶  dock %2d | arrival: %4d (%02d:%02d) ⟶  departure: %4d (%02d:%02d)\n", i, k, instance.a[i], HHa, MMa, instance.d[i], HHd, MMd)
-         end
+        else
+            @printf("      truck %2d ⟶  not assigned \n", i)
+        end
     end
 
     print("\n    ")
@@ -175,14 +179,15 @@ function displayOptimalSolution(t_elapsed::Float64, mod::Model, instance::Instan
         if instance.f[i,j] > 0
             for k=1:m, l=1:m
                 if value(mod[:z][i,j,k,l])==1
-                    @printf("      truck %2d ⟶  truck %2d   from   dock %2d ⟶  dock %2d\n", i, j, k, l)
+                    @printf("      truck %2d ⟶  truck %2d   from   dock %2d ⟶  dock %2d   of   %2d pallets\n", i, j, k, l, instance.f[i,j])
                     delivery_done += 1
                 end
             end
         end
     end
-    print("    ")
-    println("Number of transferts achieved: ", delivery_done)    
+    totalNumberTransfertsPlanned = count(!iszero, instance.f)
+    print("\n    ")
+    println("  Number of transferts achieved: $delivery_done | total transferts expected: $totalNumberTransfertsPlanned i.e. ",round(delivery_done/totalNumberTransfertsPlanned*100 ; digits=2),"%")    
 
     return nothing
 end

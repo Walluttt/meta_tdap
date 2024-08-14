@@ -21,7 +21,7 @@ function displayGanttInstance(instance::Instance)
 
     truckID = string.(collect(1:instance.n))
 
-    title("Previsional planning of trucks and transferts of pallets",fontsize=10)
+    title(instance.name * ": Previsional planning of trucks and transferts of pallets",fontsize=10)
     xlim([hmin-1,hmax+1])
 
     xlabel("time")
