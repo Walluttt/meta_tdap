@@ -8,15 +8,16 @@ function processingInstance(instance::Instance)
 
     # 1 iff truck i departs no later than truck j arrives, 0 otherwise --------
     δ::Matrix{Int64} = zeros(Int, instance.n, instance.n)
-    #=
+    #= previous construction
     for i=1:instance.n-1, j=i+1:instance.n
         if instance.d[i] <= instance.a[j]
             δ[i,j] = 1
-            δ[j,i] = 1
+            #δ[j,i] = 1
         end
     end
     =#
 
+    # new construction: checking if 2 intervals of time are empty (no conflit) or not (conflict between trucks)
     for i=1:instance.n-1, j=i+1:instance.n
         if instance.d[j] > instance.a[i] && instance.a[j] < instance.d[i] 
             # intersection of temporal periods not empty
@@ -71,49 +72,6 @@ function processingInstance(instance::Instance)
         end
         push!(dtr,v)
     end
-
-    # ***
-
-    x=zeros(Int, instance.n, instance.n)
-    for i=1:instance.n
-        for j=1:instance.n
-            if instance.d[i] <= instance.a[j]
-                x[i,j] = 1
-            end
-        end
-    end
-
-    n = instance.n  # n number of trucks
-    m = instance.m  # m number of docks
-    tr = Int64[]
-    append!(tr, instance.a, instance.d)
-    sort!(tr)
-
-    dep_t = Any[]
-    for r in 1:2n
-        current = Int64[]
-        for i in 1:n
-            if instance.d[i] <= tr[r]
-                push!(current, i)
-            end
-        end
-        push!(dep_t, current)
-    end
-
-    arr_t = Any[]
-    for r in 1:2n
-        current = Int64[]
-        for i in 1:n
-            if instance.a[i] <= tr[r]
-                push!(current, i)
-            end
-        end
-        push!(arr_t, current)
-    end 
-
-    #@assert x==δ "divergence x==δ"
-    @assert atr==arr_t "divergence atr==arr_t"
-    @assert dtr==dep_t "divergence dtr==dep_t"
 
     return δ, tr, atr, dtr
 end

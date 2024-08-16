@@ -107,18 +107,6 @@ function solution_checkerValues(instance::Instance, mod::Model)
                             HHd, MMd = convertMinutesHHMM(instance.d[j])
                             @printf("        truck %2d ⟶  dock %2d | arrival: %4d (%02d:%02d) ⟶  departure: %4d (%02d:%02d)\n", j, dock_j, instance.a[j], HHa, MMa, instance.d[j], HHd, MMd)
                         end
-                        #=
-                        if instance.f[i,j] > 0 
-                            global valide = false
-                            println("      not valid 2: trucks $i and $j are doing a transfert of $(instance.f[i,j]) pallets on the same dock ($dock_i)")
-                            HHa, MMa = convertMinutesHHMM(instance.a[i])
-                            HHd, MMd = convertMinutesHHMM(instance.d[i])
-                            @printf("        truck %2d ⟶  dock %2d | arrival: %4d (%02d:%02d) ⟶  departure: %4d (%02d:%02d)\n", i, dock_i, instance.a[i], HHa, MMa, instance.d[i], HHd, MMd)
-                            HHa, MMa = convertMinutesHHMM(instance.a[j])
-                            HHd, MMd = convertMinutesHHMM(instance.d[j])
-                            @printf("        truck %2d ⟶  dock %2d | arrival: %4d (%02d:%02d) ⟶  departure: %4d (%02d:%02d)\n", j, dock_j, instance.a[j], HHa, MMa, instance.d[j], HHd, MMd)
-                        end
-                        =#
                     end
                 end
             end
