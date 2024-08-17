@@ -1,6 +1,9 @@
-using Printf
+# =============================================================================
+# TDAP
+# =============================================================================
 
-# --------------------------------------------------------------------------- #
+
+# -----------------------------------------------------------------------------
 # Convert a number of minutes in hh:mm
 
 function convertMinutesHHMM(minutes::Int64)
@@ -12,13 +15,13 @@ function convertMinutesHHMM(minutes::Int64)
 end
 
 
-# --------------------------------------------------------------------------- #
+# -----------------------------------------------------------------------------
 # Display all information of an instance
 
-function displayInstance(instance)
+function displayInstance(instance::Instance)
 
     println("")
-    println("instance <<< $(instance.name) >>>\n")
+    println("  instance ............. $(instance.name)")
     println("  number of trucks...... $(instance.n)")
     println("  number of docks....... $(instance.m)")
     println("  maximum capacity ..... $(instance.C)")
@@ -77,15 +80,15 @@ function displayInstance(instance)
 end
 
 
-# --------------------------------------------------------------------------- #
+# -----------------------------------------------------------------------------
 # Display information deduced from the processing of the instance
 
-function displayProcessing(δ::Matrix{Int64}, tr::Vector{Int64}, atr::Vector{Vector{Int64}}, dtr::Vector{Vector{Int64}})
+function displayProcessing(δ::Matrix{Int64}, tr::Vector{Int64}, atr::Vector{Vector{Int64}}, dtr::Vector{Vector{Int64}}, instance::Instance)
 
     # -------------------------------------------------------------------------
     # temporal relations between trucks
 
-    #@show δ  #x
+    #@show δ 
 
     println("  1 iff truck i departs no later than truck j arrives, 0 otherwise:")
     for i in 1:instance.n
@@ -104,8 +107,8 @@ function displayProcessing(δ::Matrix{Int64}, tr::Vector{Int64}, atr::Vector{Vec
     # trucks leaving at a given marker time.
 
     #@show tr
-    #@show atr  #arr_t
-    #@show dtr  #dep_t
+    #@show atr  
+    #@show dtr  
 
     println("  Arrivals and departures of trucks at a time marker:")
     for r=1:2*instance.n
@@ -119,13 +122,13 @@ function displayProcessing(δ::Matrix{Int64}, tr::Vector{Int64}, atr::Vector{Vec
 end
 
 
-# --------------------------------------------------------------------------- #
+# -----------------------------------------------------------------------------
 # Display the details for the optimal solution obtained
 
-function displayOptimalSolution(t_elapsed::Float64, mod::Model, instance::Instance)
+function displayOptimalSolution(formulationID::String, t_elapsed::Float64, mod::Model, instance::Instance)
 
     println(" ")
-    println("  Optimal solution found:")
+    println("  Optimal solution found ($formulationID):")
 
     # -------------------------------------------------------------------------
     print("    ")

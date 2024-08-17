@@ -1,4 +1,10 @@
 # =============================================================================
+# TDAP
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# Check if the solution obtained verifies all the constraints of the formulation M
 
 function solution_checkerM(instance::Instance, δ::Matrix{Int64}, tr::Vector{Int64}, mod::Model)
 
@@ -77,13 +83,14 @@ function solution_checkerM(instance::Instance, δ::Matrix{Int64}, tr::Vector{Int
         end
     end
     
-    print("\n    ")
-    println("The optimal solution generated is valid according the formulation M.\n")
+    #print("\n    ")
+    #println("The optimal solution generated is valid according the formulation M.\n")
     return true
 end
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
+# Check if the solution obtained is free of conflict at the dock
 
 function solution_checkerValues(instance::Instance, mod::Model)
 
@@ -113,10 +120,79 @@ function solution_checkerValues(instance::Instance, mod::Model)
         end
     end
     if valide
-        print("    ")
-        println("The optimal solution generated is valid according their values.\n")
+        #print("    ")
+        #println("The optimal solution generated is valid according their values.\n")
         return true
     else
         return false
     end
+end
+
+
+# -----------------------------------------------------------------------------
+# Query the optimal solution obtained
+
+function queryOptimalSolutionMonoObj(t_elapsed::Float64, mod::Model, instance::Instance)
+
+    # -------------------------------------------------------------------------    
+    # Splitting the values stored in instances in separated variables (Destructuring Assignment)
+    (; name, n,m, a,d, t,f,c,p, C) = instance
+
+    # -------------------------------------------------------------------------
+    sol_tElapsed = trunc(t_elapsed, digits=3)
+
+    # -------------------------------------------------------------------------
+    sol_zOpt = Int(round( objective_value(mod) ))
+
+    cost = 0.0
+    for i=1:n, j=1:n, k=1:m, l=1:m
+        cost =  cost + c[k,l] * t[k,l] * value(mod[:z][i,j,k,l])
+    end
+    sol_zOptCost = Int(round(cost))
+
+    penality = 0.0
+    for i=1:n
+        for j=1:n
+            som = 0
+            for k=1:m, l=1:m
+                som = som + value(mod[:z][i,j,k,l])
+            end
+            penality = penality + p[i,j] * f[i,j] * (1-som)
+        end
+    end
+    sol_zOptPenalty =  Int(round(penality))
+
+    # -------------------------------------------------------------------------
+    
+    nTruckAssigned = 0
+
+    y = copy(value.(mod[:y]))
+    for i=1:n
+        k = findfirst(isequal(1),y[i,:])
+        if  typeof(k) != Nothing
+            nTruckAssigned+=1
+        end
+    end
+
+    sol_nTruckAssigned = nTruckAssigned
+
+
+    nTransfertDone = 0
+    for i=1:n, j=1:n
+        if instance.f[i,j] > 0
+            for k=1:m, l=1:m
+                if value(mod[:z][i,j,k,l])==1
+                    nTransfertDone += 1
+                end
+            end
+        end
+    end
+    totalNumberTransfertsPlanned = count(!iszero, instance.f)
+ 
+    sol_nTransfertDone = nTransfertDone
+    sol_pTransfertDone = round(nTransfertDone / totalNumberTransfertsPlanned * 100 ; digits=2)
+
+    # -------------------------------------------------------------------------
+
+    return Solution(sol_tElapsed, sol_zOpt, sol_zOptCost, sol_zOptPenalty, sol_nTruckAssigned, sol_nTransfertDone, sol_pTransfertDone)
 end

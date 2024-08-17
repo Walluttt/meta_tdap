@@ -1,5 +1,10 @@
 
 # =============================================================================
+# TDAP
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
 # Loading an instance of TDAP (format from Gelareh) 
 #
 # Each instance is composed of 2 files: 
@@ -76,42 +81,68 @@ function loadTDAP_singleObjective(path::String, fname::String)
 end
 
 
-# =============================================================================
-# collect the un-hidden filenames available in a given directory
+# -----------------------------------------------------------------------------
+# set the filenames 
 
-function getfname(target)
-    # target : string := chemin + nom du repertoire ou se trouve les instances
+function setfname()
 
-    # positionne le currentdirectory dans le repertoire cible
-    cd(joinpath(pwd(),target))
+    finstances = [  "compile",
+                    "data_10_3_0",
+                    "data_10_3_1",
+                    "data_10_3_2",
+                    "data_12_4_0"
+                ]
+    return finstances
+end
 
-    # retourne le repertoire courant
-    #println("pwd = ", pwd())
+function setfnameall()
 
-    # recupere tous les fichiers se trouvant dans le repertoire indique
-    allfiles = readdir()
-
-    # vecteur booleen qui marque les noms de fichiers valides
-    flag = trues(size(allfiles))
-
-    k=1
-    for f in allfiles
-        # traite chaque fichier du repertoire
-        if f[1] != '.'
-            # pas un fichier cache => conserver
-            #println("fname = ", f)
-        else
-            # fichier cache => supprimer
-            flag[k] = false
-        end
-        k = k+1
-    end
-
-    # repositionne le chemin
-    cd(joinpath(pwd(),".."))
-
-    # extrait les noms valides et retourne le vecteur correspondant
-    finstances = allfiles[flag]
-    
+    finstances = [  "compile",
+                    "data_10_3_0",
+                    "data_10_3_1",
+                    "data_10_3_2",
+                    "data_12_4_0",
+                    "data_12_4_1",
+                    "data_12_4_2",
+                    "data_12_6_0",
+                    "data_12_6_1",
+                    "data_12_6_2",
+                    "data_14_4_0",
+                    "data_14_4_1",
+                    "data_14_4_2",
+                    "data_14_6_0",
+                    "data_14_6_1",
+                    "data_14_6_2",
+                    "data_16_4_0",
+                    "data_16_4_1",
+                    "data_16_4_2",
+                    "data_16_6_0",
+                    "data_16_6_1",
+                    "data_16_6_2",
+                    "data_18_4_0",
+                    "data_18_4_1",
+                    "data_18_4_2",
+                    "data_18_6_0",
+                    "data_18_6_1",
+                    "data_18_6_2",
+                    "data_20_6_0",
+                    "data_20_6_1",
+                    "data_20_6_2",
+                    "data_20_8_0",
+                    "data_20_8_1",
+                    "data_20_8_2",
+                    "data_25_6_0",
+                    "data_25_6_1",
+                    "data_25_6_2",
+                    "data_25_8_0",
+                    "data_25_8_1",
+                    "data_25_8_2",
+                    "data_30_6_0",
+                    "data_30_6_1",
+                    "data_30_6_2",
+                    "data_30_8_0",
+                    "data_30_8_1",
+                    "data_30_8_2"
+                ]
     return finstances
 end

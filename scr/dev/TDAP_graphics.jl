@@ -1,6 +1,9 @@
-using PyPlot
+# =============================================================================
+# TDAP
+# =============================================================================
 
-# --------------------------------------------------------------------------- #
+
+# -----------------------------------------------------------------------------
 # Display the Gantt chart corresponding to the previsionnal planning of 
 # trucks and transferts of pallets
 
@@ -59,10 +62,10 @@ function drawGanttInstance(instance::Instance)
 end 
 
 
-# --------------------------------------------------------------------------- #
+# -----------------------------------------------------------------------------
 # Compute and draw the evolution of the load in the terminal in term of pallets
 
-function drawLoadTerminal(instance, tr, atr, dtr, mod, yLim_OnOff)
+function drawLoadTerminal(formulationID, instance, tr, atr, dtr, mod, yLim_OnOff)
 
     n = instance.n
     m = instance.m
@@ -110,7 +113,7 @@ function drawLoadTerminal(instance, tr, atr, dtr, mod, yLim_OnOff)
         end    
     end
 
-    figure("Figure 2",figsize=(8,6))
+    figure(formulationID,figsize=(8,6))
     title(instance.name*": Evolution of the load in the terminal")
     xlabel("Time markers")
     ylabel("Number of pallets")
