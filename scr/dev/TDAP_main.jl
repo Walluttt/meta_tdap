@@ -15,11 +15,13 @@ println("\n  TDAP: Solving single objective formulations M and G \n")
 
 println("  Load and compile the code...")
 
-using Printf 
-using JuMP 
-using GLPK 
-#using Gurobi
-using PyPlot
+using Printf             # to format the output
+using JuMP               # Algebraic modeling language to manage a MIP model
+using GLPK               # to use the GLPK MIP solver
+#using Gurobi            # to use the Gurobi MIP solver
+using PyPlot             # to draw graphics
+using DataFrames, CSV    # to manage dataframes
+using PrettyTables       # to export table (dataframe) in latex
 
 include("TDAP_datastructures.jl")
 include("TDAP_filesManagement.jl")
@@ -33,6 +35,7 @@ global experiment = true      # true → perform all the instances | false → p
 global display    = false     # true → output information in the terminal | false → nothing 
 global graphic    = false     # true → output information graphically  | false → nothing
 IPsolver = GLPK.Optimizer     # Setup the IP solver with GLPK → GLPK.Optimizer
+timeLimit = 600.0             # Setup the time limit (seconds) allowed to the MIP solver
 #IPsolver = Gurobi.Optimizer  # Setup the IP solver with Gurobi → Gurobi.Optimizer
 
 
@@ -105,6 +108,8 @@ for iInstance = 1:nInstances
     # -----------------------------------------------------------------------------
     # Setup the model
     modM = formulation_M(instance, δ, atr, dtr, IPsolver)
+    set_silent(modM)
+    set_time_limit_sec(modM, timeLimit)
 
     # -----------------------------------------------------------------------------
     # Compute the optimal solution
@@ -115,13 +120,22 @@ for iInstance = 1:nInstances
     # -----------------------------------------------------------------------------
     # Query the optimal solution
     if termination_status(modM) == OPTIMAL
+
         all_OptSolutionM[iInstance] = queryOptimalSolutionMonoObj(t_elapsed, modM, instance)
         display ? displayOptimalSolution("Formulation M", t_elapsed, modM, instance) : nothing
         #@assert solution_checkerM(instance, δ, tr, modM) "Fatal error (with the formulation M) !!!"
         @assert solution_checkerValues(instance, modM) "Fatal error (optimal solution no valid) !!!"
         graphic ? drawLoadTerminal("Formulation M", instance, tr, atr, dtr, modM, :yLim_Off) : nothing 
+
+    elseif termination_status(modM) == TIME_LIMIT
+
+        display ? println("Formulation M: time limit reached") : nothing
+        all_OptSolutionM[iInstance] = Solution(timeLimit, -1, -1, -1, -1, -1, -1.0)
+
     else
+
         @assert false "No optimal solution found!!!"
+
     end
 
     if !display
@@ -144,6 +158,8 @@ for iInstance = 1:nInstances
     # -----------------------------------------------------------------------------
     # Setup the model
     modG = formulation_G(instance, δ, atr, dtr, IPsolver)
+    set_silent(modG)
+    set_time_limit_sec(modG, timeLimit)
 
     # -----------------------------------------------------------------------------
     # Compute the optimal solution
@@ -154,12 +170,21 @@ for iInstance = 1:nInstances
     # -----------------------------------------------------------------------------
     # Query the optimal solution
     if termination_status(modG) == OPTIMAL
+
         all_OptSolutionG[iInstance] = queryOptimalSolutionMonoObj(t_elapsed, modG, instance)
         display ? displayOptimalSolution("Formulation G", t_elapsed, modG, instance) : nothing 
         @assert solution_checkerValues(instance, modG) "Fatal error (optimal solution no valid) !!!"
         graphic ? drawLoadTerminal("Formulation G", instance, tr, atr, dtr, modG, :yLim_Off) : nothing 
+
+    elseif termination_status(modG) == TIME_LIMIT
+
+        display ? println("Formulation G: time limit reached") : nothing
+        all_OptSolutionG[iInstance] = Solution(timeLimit, -1, -1, -1, -1, -1, -1.0)
+
     else
+
         @assert false "No optimal solution found!!!"
+
     end
 
     if !display
@@ -171,5 +196,67 @@ for iInstance = 1:nInstances
         @printf(" |           %4d", all_OptSolutionG[iInstance].nTransfertDone)
         @printf(" |             %6.2f \n", all_OptSolutionG[iInstance].pTransfertDone)
     end
+
+end
+
+
+# =============================================================================
+# Record the results ath the end of a numerical experiment
+# =============================================================================
+
+if experiment
+
+    # -------------------------------------------------------------------------
+    # Save the results into a DataFrame
+
+    dfM = DataFrame(Dict(n=>[getfield(x, n) for x in all_OptSolutionM] for n in fieldnames(Solution)))
+    dfM[!, :fname] = copy(fnames)
+    deleteat!(dfM,1)
+    CSV.write("allresultsM.csv", dfM[!, [8,4,5,6,7,1,2,3]])
+
+    dfG = DataFrame(Dict(n=>[getfield(x, n) for x in all_OptSolutionG] for n in fieldnames(Solution)))
+    dfG[!, :fname] = copy(fnames)
+    deleteat!(dfG,1)
+    CSV.write("allresultsG.csv", dfG[!, [8,4,5,6,7,1,2,3]])
+
+
+    # -------------------------------------------------------------------------
+    # save the results into latex tables
+
+    open("resM.tex", "w") do f
+        pretty_table(f, dfM[!, [8,4,5,6,7,1,2,3]], backend = Val(:latex)) 
+    end
+
+    open("resG.tex", "w") do f
+        pretty_table(f, dfG[!, [8,4,5,6,7,1,2,3]], backend = Val(:latex)) 
+    end
+
+    # -------------------------------------------------------------------------
+    # save the results into latex tables
+
+    figure("1. Comparison between formulations M and G", figsize = (10, 5.5))
+    title("Objective function values collected")
+    xticks(rotation = 45, ha = "right")
+    tick_params(labelsize = 6, axis = "x")
+    xlabel("Name of datafiles")
+    ylabel("Objective function value")
+    plot(dfM[!,:fname],dfM[!,:zOpt], linewidth=1, marker="o", markersize=5, color="r", label ="formulation M")
+    plot(dfG[!,:fname],dfG[!,:zOpt], linewidth=1, marker="s", markersize=5, color="b", label ="formulation G")
+    legend(loc=4, fontsize ="small")
+    grid(color="gray", linestyle=":", linewidth=0.5)
+    savefig("resultsMGobjFct.png")
+
+
+    figure("2. Comparison between formulations M and G", figsize = (10, 5.5))
+    title("Number of transfers collected")
+    xticks(rotation = 45, ha = "right")
+    tick_params(labelsize = 6, axis = "x")
+    xlabel("Name of datafiles")
+    ylabel("Number of transfers")
+    plot(dfM[!,:fname],dfM[!,:nTransfertDone], linewidth=1, marker="o", markersize=5, color="r", label ="formulation M")
+    plot(dfG[!,:fname],dfG[!,:nTransfertDone], linewidth=1, marker="s", markersize=5, color="b", label ="formulation G")
+    legend(loc=4, fontsize ="small")
+    grid(color="gray", linestyle=":", linewidth=0.5)
+    savefig("resultsMGnbrTft.png")
 
 end

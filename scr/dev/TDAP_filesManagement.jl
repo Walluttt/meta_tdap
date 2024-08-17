@@ -84,65 +84,95 @@ end
 # -----------------------------------------------------------------------------
 # set the filenames 
 
+function setfnameTest()
+
+    finstances = [  "compile",
+                    "data_10_3_0",
+                    "data_10_3_1",
+                    "data_10_3_2"#,
+                    #"data_12_4_0"
+                ]
+    return finstances
+end
+
 function setfname()
 
     finstances = [  "compile",
                     "data_10_3_0",
                     "data_10_3_1",
                     "data_10_3_2",
-                    "data_12_4_0"
-                ]
-    return finstances
-end
-
-function setfnameall()
-
-    finstances = [  "compile",
-                    "data_10_3_0",
-                    "data_10_3_1",
-                    "data_10_3_2",
+                    "data_10_3_3",
+                    "data_10_3_4",
                     "data_12_4_0",
                     "data_12_4_1",
                     "data_12_4_2",
+                    "data_12_4_3",
+                    "data_12_4_4",
                     "data_12_6_0",
                     "data_12_6_1",
                     "data_12_6_2",
+                    "data_12_6_3",
+                    "data_12_6_4",
                     "data_14_4_0",
                     "data_14_4_1",
                     "data_14_4_2",
+                    "data_14_4_3",
+                    "data_14_4_4",
                     "data_14_6_0",
                     "data_14_6_1",
                     "data_14_6_2",
+                    "data_14_6_3",
+                    "data_14_6_4",
                     "data_16_4_0",
                     "data_16_4_1",
                     "data_16_4_2",
+                    "data_16_4_3",
+                    "data_16_4_4",
                     "data_16_6_0",
                     "data_16_6_1",
                     "data_16_6_2",
+                    "data_16_6_3",
+                    "data_16_6_4",
                     "data_18_4_0",
                     "data_18_4_1",
                     "data_18_4_2",
+                    "data_18_4_3",
+                    "data_18_4_4",
                     "data_18_6_0",
                     "data_18_6_1",
                     "data_18_6_2",
+                    "data_18_6_3",
+                    "data_18_6_4",
                     "data_20_6_0",
                     "data_20_6_1",
                     "data_20_6_2",
+                    "data_20_6_3",
+                    "data_20_6_4",
                     "data_20_8_0",
                     "data_20_8_1",
                     "data_20_8_2",
+                    "data_20_8_3",
+                    "data_20_8_4",
                     "data_25_6_0",
                     "data_25_6_1",
                     "data_25_6_2",
+                    "data_25_6_3",
+                    "data_25_6_4",
                     "data_25_8_0",
                     "data_25_8_1",
                     "data_25_8_2",
+                    "data_25_8_3",
+                    "data_25_8_4",
                     "data_30_6_0",
                     "data_30_6_1",
                     "data_30_6_2",
+                    "data_30_6_3",
+                    "data_30_6_4",
                     "data_30_8_0",
                     "data_30_8_1",
-                    "data_30_8_2"
+                    "data_30_8_2",
+                    "data_30_8_3",
+                    "data_30_8_4"
                 ]
     return finstances
 end

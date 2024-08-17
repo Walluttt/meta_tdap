@@ -1,0 +1,4 @@
+fname,tElapsed,zOpt,zOptCost,zOptPenalty,nTransfertDone,nTruckAssigned,pTransfertDone
+data_10_3_0,2.546,3105,38,3067,20,9,64.52
+data_10_3_1,3.65,8410,112,8298,28,7,46.67
+data_10_3_2,6.781,6545,120,6425,28,8,58.33
