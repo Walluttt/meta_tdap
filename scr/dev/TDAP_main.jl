@@ -17,8 +17,8 @@ println("  Load and compile the code...")
 
 using Printf             # to format the output
 using JuMP               # Algebraic modeling language to manage a MIP model
-using GLPK               # to use the GLPK MIP solver
-#using Gurobi            # to use the Gurobi MIP solver
+#using GLPK               # to use the GLPK MIP solver
+using Gurobi            # to use the Gurobi MIP solver
 using PyPlot             # to draw graphics
 using DataFrames, CSV    # to manage dataframes
 using PrettyTables       # to export table (dataframe) in latex
@@ -34,7 +34,7 @@ include("TDAP_tools.jl")
 global experiment = true      # true → perform all the instances | false → perform one instance
 global display    = false     # true → output information in the terminal | false → nothing 
 global graphic    = false     # true → output information graphically  | false → nothing
-IPsolver = GLPK.Optimizer     # Setup the IP solver with GLPK → GLPK.Optimizer
+IPsolver = Gurobi.Optimizer   # Setup the IP solver with GLPK → GLPK.Optimizer
 timeLimit = 600.0             # Setup the time limit (seconds) allowed to the MIP solver
 #IPsolver = Gurobi.Optimizer  # Setup the IP solver with Gurobi → Gurobi.Optimizer
 
@@ -234,29 +234,70 @@ if experiment
     # -------------------------------------------------------------------------
     # save the results into latex tables
 
-    figure("1. Comparison between formulations M and G", figsize = (10, 5.5))
-    title("Objective function values collected")
-    xticks(rotation = 45, ha = "right")
+    figure("1. Comparison between formulations M and G", figsize = (12, 7.5))
+    title("Optimal value of objective functions collected")
+    xticks(rotation = 60, ha = "right")
     tick_params(labelsize = 6, axis = "x")
     xlabel("Name of datafiles")
-    ylabel("Objective function value")
+    ylabel("Optimal value of objective functions")
     plot(dfM[!,:fname],dfM[!,:zOpt], linewidth=1, marker="o", markersize=5, color="r", label ="formulation M")
     plot(dfG[!,:fname],dfG[!,:zOpt], linewidth=1, marker="s", markersize=5, color="b", label ="formulation G")
-    legend(loc=4, fontsize ="small")
+    legend(loc=2, fontsize ="small")
     grid(color="gray", linestyle=":", linewidth=0.5)
     savefig("resultsMGobjFct.png")
 
 
-    figure("2. Comparison between formulations M and G", figsize = (10, 5.5))
+    figure("2. Comparison between formulations M and G", figsize = (12, 7.5))
     title("Number of transfers collected")
-    xticks(rotation = 45, ha = "right")
+    xticks(rotation = 60, ha = "right")
     tick_params(labelsize = 6, axis = "x")
     xlabel("Name of datafiles")
     ylabel("Number of transfers")
     plot(dfM[!,:fname],dfM[!,:nTransfertDone], linewidth=1, marker="o", markersize=5, color="r", label ="formulation M")
     plot(dfG[!,:fname],dfG[!,:nTransfertDone], linewidth=1, marker="s", markersize=5, color="b", label ="formulation G")
-    legend(loc=4, fontsize ="small")
+    legend(loc=2, fontsize ="small")
     grid(color="gray", linestyle=":", linewidth=0.5)
     savefig("resultsMGnbrTft.png")
+
+    x_values = (String)[]
+    y_values = (Int64)[]
+    facecolors = (String)[]
+    winner = (String)[]
+    x_file = copy(dfM[!,:fname])
+    y_M = copy(dfM[!,:nTransfertDone])
+    y_G = copy(dfG[!,:nTransfertDone])
+    for i in 1:length(y_M)
+        if y_M[i] != -1 && y_G[i] != -1
+            push!(x_values, x_file[i])
+            if y_G[i] > y_M[i]
+                println(">")
+                push!(y_values, y_G[i] - y_M[i])
+                push!(facecolors,"blue")
+                push!(winner,"G")
+            elseif y_G[i] < y_M[i]
+                push!(y_values, y_M[i] - y_G[i])
+                push!(facecolors,"red")
+                push!(winner,"M")
+            else
+                push!(y_values, 0)
+                push!(facecolors,"black")
+                push!(winner,"=")
+            end
+        end
+    end
+    edgecolors = facecolors
+    figure("3. Comparison between formulations M and G", figsize = (12, 7.5))
+    title("Positive difference of number of transfers collected")    
+    xticks(1:length(x_values), x_values, rotation = 60, ha = "right")
+    tick_params(labelsize = 6, axis = "x")
+    xlabel("Name of datafiles")
+    ylabel("Positive difference of number of transfers")
+    yticks(0:maximum(y_values))
+    ylim(-1,5)
+    bar(x_values, y_values, color=facecolors, edgecolor=edgecolors, alpha=0.5)
+    for i=1:length(x_values)
+        text(i, y_values[i]+0.075, winner[i], ha = "center")
+    end
+    savefig("resultsMGdifference.png")
 
 end
