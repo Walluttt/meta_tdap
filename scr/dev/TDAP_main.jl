@@ -232,8 +232,22 @@ if experiment
     end
 
     # -------------------------------------------------------------------------
-    # save the results into latex tables
+    # draw graphically the results
 
+    # Time elapsed for instances solved to the optimum by the two formulations
+    figure("0. Comparison between formulations M and G", figsize = (12, 7.5))
+    title("Elapsed time collected")
+    xticks(rotation = 60, ha = "right")
+    tick_params(labelsize = 6, axis = "x")
+    xlabel("Name of datafiles")
+    ylabel("Elapsed time (seconds)")
+    plot(dfM[!,:fname],dfM[!,:tElapsed], linewidth=1, marker="o", markersize=5, color="r", label ="formulation M")
+    plot(dfG[!,:fname],dfG[!,:tElapsed], linewidth=1, marker="s", markersize=5, color="b", label ="formulation G")
+    legend(loc=2, fontsize ="small")
+    grid(color="gray", linestyle=":", linewidth=0.5)
+    savefig("resultsMGtime.png")
+
+    # Optimal value (when solved) for the aggregated objective function
     figure("1. Comparison between formulations M and G", figsize = (12, 7.5))
     title("Optimal value of objective functions collected")
     xticks(rotation = 60, ha = "right")
@@ -246,7 +260,7 @@ if experiment
     grid(color="gray", linestyle=":", linewidth=0.5)
     savefig("resultsMGobjFct.png")
 
-
+    # Optimal number of transfets between docks (when solved)
     figure("2. Comparison between formulations M and G", figsize = (12, 7.5))
     title("Number of transfers collected")
     xticks(rotation = 60, ha = "right")
@@ -259,6 +273,7 @@ if experiment
     grid(color="gray", linestyle=":", linewidth=0.5)
     savefig("resultsMGnbrTft.png")
 
+    # Positive difference in number of transferts for instances solved to the optimum by the two formulations
     x_values = (String)[]
     y_values = (Int64)[]
     facecolors = (String)[]
@@ -299,5 +314,5 @@ if experiment
         text(i, y_values[i]+0.075, winner[i], ha = "center")
     end
     savefig("resultsMGdifference.png")
-
+    
 end
