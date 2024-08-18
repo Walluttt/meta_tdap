@@ -162,17 +162,7 @@ function setfname()
                     "data_25_8_1",
                     "data_25_8_2",
                     "data_25_8_3",
-                    "data_25_8_4",
-                    "data_30_6_0",
-                    "data_30_6_1",
-                    "data_30_6_2",
-                    "data_30_6_3",
-                    "data_30_6_4",
-                    "data_30_8_0",
-                    "data_30_8_1",
-                    "data_30_8_2",
-                    "data_30_8_3",
-                    "data_30_8_4"
+                    "data_25_8_4"
                 ]
     return finstances
 end
