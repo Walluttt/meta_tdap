@@ -1144,9 +1144,11 @@ Note that in an operational solution, an incoming truck may leave the warehouse 
 %
 \subsection{Experiments}
 
-\color{red}
-The goal of the experiments is not to put in competition the formulations since they handle different hypotheses (no temporary storage for M vs temporary storage for G; macroscopic view of pallet's flow plus aggregated single objective for M and G vs microscopic view of pallet's flow plus multiple objective without artifact costs for 2R), but to observe and understand the optimal solutions outputted by formulations.
-\color{black}
+The goal of the experiments is to observe and understand the optimal solutions outputted by formulations.
+
+%\color{red}
+%The goal of the experiments is not to put in competition the formulations since they handle different hypotheses (no temporary storage for M vs temporary storage for G; macroscopic view of pallet's flow plus aggregated single objective for M and G vs microscopic view of pallet's flow plus multiple objective without artifact costs for 2R), but to observe and understand the optimal solutions outputted by formulations.
+%\color{black}
 
 %
 % ===
@@ -1162,11 +1164,18 @@ The experiment are performed on a  MacBook Pro laptop under macOS Ventura (versi
 \end{itemize}
 Gurobi Optimizer (version 10.0.3 build v10.0.3rc0 (mac64[x86]))  is used as MIP solver\footnote{The codes provided online are ready to use GLPK as MIP solver.}.  
 
+%
+% ===
+%
+\subsubsection{Experiment 1: deep numerical analysis of formulations M and G on a didactic instance}\label{sec:didacticMG}
+
+This experiment examines in detail  the optimal solutions obtained by the M and G formulations on a didactic instance
+ ``full mesh''.
 
 %
 % ===
 %
-\subsubsection{Experiment 1: comparison between formulations M and G}\label{sec:resMG}
+\subsubsection{Experiment 2: comparison between formulations M and G}\label{sec:resMG}
 
 This experiment focusses on  the optimal solutions obtained by the M and G formulations on small and medium size instances
  ``full mesh''.
@@ -1294,9 +1303,14 @@ Ces observations faites sur les résultats numériques issus des formulations M 
 %
 % ===
 %
-\subsubsection{Experiment 2: results obtained with formulation 2R}\label{sec:res2R}
+\subsubsection{Experiment 3: results obtained with formulation 2R}\label{sec:res2R}
 
 \color{red}
+
+Formulations M and G from one side and 2R from the other side handle different hypotheses 
+%(no temporary storage for M vs temporary storage for G; 
+(macroscopic view of pallet's flow plus aggregated single objective for M and G vs microscopic view of pallet's flow plus multiple objective without artifact costs for 2R).
+
 Expe a refaire, écriture à poursuivre
 \color{black}
 

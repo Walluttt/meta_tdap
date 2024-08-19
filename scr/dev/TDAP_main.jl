@@ -31,9 +31,9 @@ include("TDAP_formulations.jl")
 include("TDAP_graphics.jl")
 include("TDAP_tools.jl")
 
-global experiment = true      # true → perform all the instances | false → perform one instance
-global display    = false     # true → output information in the terminal | false → nothing 
-global graphic    = false     # true → output information graphically  | false → nothing
+global experiment = false      # true → perform all the instances | false → perform one instance
+global display    = true     # true → output information in the terminal | false → nothing 
+global graphic    = true     # true → output information graphically  | false → nothing
 IPsolver = Gurobi.Optimizer   # Setup the IP solver with GLPK → GLPK.Optimizer
 timeLimit = 600.0             # Setup the time limit (seconds) allowed to the MIP solver
 #IPsolver = Gurobi.Optimizer  # Setup the IP solver with Gurobi → Gurobi.Optimizer
