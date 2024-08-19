@@ -390,7 +390,7 @@ Numerical experiments are reported in Section~\ref{sec:NumericalExperiments}. Th
 Finally, Section~\ref{sec:ConclusionPerspectives} gives a conclusion and draws several perspectives.
 %
 The formulations are implemented in Julia \citep{Julia2017} with JuMP \citep{JuMP2023}, and they are provided in \ref{app:formulations}. 
-Also, in order to allow the readers to reproduce all results presented in this paper, all the material produced, i.e. codes in Julia, formulations in JuMP, and datasets in raw text files, are available online on GitHub at \color{red}URL\color{black}.
+Also, in order to allow the readers to reproduce all results presented in this paper, all the material produced, i.e. codes in Julia, formulations in JuMP, and datasets in raw text files, are available online on GitHub at \url{https://github.com/xgandibleux/TDAP}.
 
 \newpage
 %
@@ -682,7 +682,7 @@ where:
     \item [(9)] states the integrality of decision variables. 
 \end{itemize}
 \medskip
-The implementation of this formulation in Julia with JuMP is given in \ref{app:JuMPformulationM} and on a GitHub repository available online at \color{red}\url{xxx}\color{black}.
+The implementation of this formulation in Julia with JuMP is given in \ref{app:JuMPformulationM} and on a GitHub repository available online at \url{https://github.com/xgandibleux/TDAP}.
 
 %
 % =======================================================================
@@ -871,7 +871,7 @@ In addition, when the indices are missing or in excess, or when their values are
 We have therefore made the corrections, which have enabled us to obtain a formulation that provides consistent solutions. 
 Unfortunately, we were unable to reproduce the results announced by the authors.
 %
-The implementation  in Julia with JuMP after having fixed issues of this formulation is given in \ref{app:JuMPformulationG} and on a GitHub repository available online at \url{xxx}.    
+The implementation  in Julia with JuMP after having fixed issues of this formulation is given in \ref{app:JuMPformulationG} and on a GitHub repository available online at \url{https://github.com/xgandibleux/TDAP}.    
 
 %
 % =======================================================================
@@ -955,7 +955,7 @@ Indeed, in the formulation G, the parameter $t_{kl}$ is considered as a global v
 In formulation 2R, $t_{kl}$ is the unitary time required by a forklift to do a round trip when it moves a pallet from $k$ to $l$.
 With this adaptation, the formulation takes into consideration the real quantity $f_{ij}$ of pallets convoyed into account in the computation of the time required for transferring all the pallets from $k$ to $l$.
 
-The implementation of this formulation in Julia with JuMP is given in \ref{app:JuMPformulationR} and on a GitHub repository available online at \url{xxx}.
+The implementation of this formulation in Julia with JuMP is given in \ref{app:JuMPformulation2R} and on a GitHub repository available online at \url{https://github.com/xgandibleux/TDAP}.
 \medskip
 
 %
@@ -1144,7 +1144,9 @@ Note that in an operational solution, an incoming truck may leave the warehouse 
 %
 \subsection{Experiments}
 
+\color{red}
 The goal of the experiments is not to put in competition the formulations since they handle different hypotheses (no temporary storage for M vs temporary storage for G; macroscopic view of pallet's flow plus aggregated single objective for M and G vs microscopic view of pallet's flow plus multiple objective without artifact costs for 2R), but to observe and understand the optimal solutions outputted by formulations.
+\color{black}
 
 %
 % ===
@@ -1152,12 +1154,13 @@ The goal of the experiments is not to put in competition the formulations since 
 \subsubsection{Experimental environment}
 
 All the algorithms are implemented in Julia (version 1.10) and uses JuMP (version 1.21) as algebraic modeling language.
+The codes are available online at \url{https://github.com/xgandibleux/TDAP}.
 The experiment are performed on a  MacBook Pro laptop under macOS Ventura (version 13.6) equipped as follow:
 \begin{itemize}
     \item CPU model: 3.5 GHz Intel Core i7 double cores.
     \item Memory: 16 Go 2133 MHz LPDDR3.
 \end{itemize}
-Gurobi Optimizer (version 10.0.3 build v10.0.3rc0 (mac64[x86]))  is used as MIP solver.  
+Gurobi Optimizer (version 10.0.3 build v10.0.3rc0 (mac64[x86]))  is used as MIP solver\footnote{The codes provided online are ready to use GLPK as MIP solver.}.  
 
 
 %
@@ -1165,37 +1168,102 @@ Gurobi Optimizer (version 10.0.3 build v10.0.3rc0 (mac64[x86]))  is used as MIP 
 %
 \subsubsection{Experiment 1: comparison between formulations M and G}\label{sec:resMG}
 
-This experiment aims to compare the optimal solutions obtained by the M and G formulations on instances ``full mesh''.
+This experiment focusses on  the optimal solutions obtained by the M and G formulations on small and medium size instances
+ ``full mesh''.
 %
-In particular, we want to observe whether the formulation G is indeed capable of finding optimal solutions with a higher number of pallets transferred between trucks than the formulation M.
+In particular, we want to observe the pallets transferred between trucks.
+%whether the formulation G is indeed capable of finding optimal solutions with a higher number of pallets transferred between trucks than the formulation M.
 %
-For this experiment, a computation time limit of 600 seconds is given to Gurobi.
+For this experiment, a computation time limit of 600 seconds is given to Gurobi\footnote{\citet{MIAO2009} have reported the difficulty for finding optimal solutions for medium-sized instances within a set time limit of 7200 seconds using CPLEX.}.
 This value was chosen because it has shown to be sufficient to observe the behaviour of the two formulations given our computer configuration.
 
-65 instances of increasing size were selected from the available dataset with the aim of being optimally solved by GUROBI\footnote{It is important to point out that in the 2009 paper, they had difficulty finding optimal solutions for medium-sized instances and good feasible solutions for large-sized instances within a set time limit of 7200 seconds using CPLEX. Even with the progress we have made in solvers in recent years, we also encounter limitations.}.
+65 instances of increasing size were selected from the available dataset with the aim of being optimally solved by Gurobi.
 % we will therefore selected instances manageab 600 seconds is appeared as the limit on our configuration}.%, which is not anymore true for the following instances available in the dataset. 
 %
-For both formulations and for each instance, the results collected, i.e. (1) the optimal objective value, (2) the number of transferts achieved, and (2) the CPUtime in seconds 
-are gathered together in Table \ref{tab:M_vs_G_results}, and Figures \ref{fig:res1MG} and \ref{fig:res2MG} synthesise  graphically these results.
+For both formulations and for each instance, the results collected, i.e. 
+(1) the optimal objective value (aggregated cost, operational cost, penalty cost), 
+(2) the CPUtime in seconds,
+(3) the transferts of pallets between docks (number and percentage) achieved,   and
+(4) the number of trucks assigned to a dock
+are gathered together in Tables \ref{tab:M_results} and \ref{tab:G_results}, and Figures \ref{fig:res1MG} and \ref{fig:res2MG} synthesise  graphically these results.
 
 \color{red}
-The results numerically confirm the assertions presented in \citep{Gelareh2015,Gelareh2021}. Indeed, for all the instances, the optimal value of the objective function is higher for formulation M than the formulation G, notably due to the extra transportation costs discussed in Section \ref{sec:extratransportationcosts} and a lower penality occuring in the solution since the optimal number of pallets transferred is higher for formulation G than the formulation M, since in formulation G the temporary storage in the crossdock is allowed as discussed in Section \ref{sec:temporary storage}.
 
-Although it is not a main topic here, the CPU times used by GUROBI are in the same orders of magnitude for both formulations (except for a few instances where the time measured with formulation G is significantly higher). Here, It is worth to remind that results are presented in \citep{Gelareh2015,GELAREH2016} to tighten the formulation G, letting a potential advantage to the latter formulation on this criterion.
+%# commandes pour extraire les chiffres
+%julia> for i in 1:nrow(dfM) if dfM[i,:tElapsed] < dfG[i,:tElapsed] println(i, " ", dfM[i,:fname], " ", dfM[i,:tElapsed], " ", dfG[i,:tElapsed]); end; end
+%12 data_12_6_1 63.788 89.21
+%13 data_12_6_2 176.614 191.381
+
+Hormis pour deux instances de petites tailles, la figure \ref{fig:resTimeMG} montre que la formulation M requière plus de temps de resolution au solveur MIP que la formulation G.
+L'écart entre les deux augmente significativement lorsque les tailles d'instance augmentent, notamment lorsque le nombre de docks à considérer augmente.
+Le temps de resolution d'une instance sous la formulation M avec Gurobi atteint la limite de temps de 600 secondes bien avant la formulation G.
+Sous l'angle des temps de resolution, la formulation G apparait donc meilleure que la formulation M.
+Here, It is worth to remind that results are presented in \citep{Gelareh2015,GELAREH2016} to tighten the formulation G, letting a potential advantage to the latter formulation on this criterion.
+
+%# commandes pour extraire les chiffres
+%julia> for i in 1:nrow(dfM) if dfM[i,:zOpt] < dfG[i,:zOpt] && dfM[i,:zOpt] != -1 println(i, " ", dfM[i,:fname], " ", dfM[i,:zOpt], " ", dfG[i,:zOpt]); end; end
+%6 data_12_4_0 13508 13554
+%13 data_12_6_2 2251 2366
+%15 data_12_6_4 2625 2809
+%21 data_14_6_0 6254 6380
+%30 data_16_4_4 9664 9951
+%32 data_16_6_1 3485 3915
+
+%# commandes pour extraire les chiffres
+%julia> for i in 1:nrow(dfM) if dfM[i,:zOptCost] < dfG[i,:zOptCost] && dfM[i,:zOptCost] != -1 println(i, " ", dfM[i,:fname], " ", dfM[i,:zOptCost], " ", dfG[i,:zOptCost]); end; end
+
+%# commandes pour extraire les chiffres
+%julia> for i in 1:nrow(dfM) if dfM[i,:zOptPenalty] < dfG[i,:zOptPenalty] && dfM[i,:zOptPenalty] != -1 println(i, " ", dfM[i,:fname], " ", dfM[i,:zOptPenalty], " ", dfG[i,:zOptPenalty]); end; end
+%1 data_10_3_0 3003 3067
+%6 data_12_4_0 13312 13462
+%13 data_12_6_2 1719 2106
+%14 data_12_6_3 0 189
+%15 data_12_6_4 2203 2623
+%18 data_14_4_2 7096 7368
+%21 data_14_6_0 5494 6088
+%30 data_16_4_4 9378 9864
+%32 data_16_6_1 2679 3622
+%33 data_16_6_2 7618 7625
+%37 data_18_4_1 1301 1629
+%38 data_18_4_2 12486 12515
+%41 data_18_6_0 5467 5651
+%42 data_18_6_1 7664 7896
+%44 data_18_6_3 9326 9736
+%49 data_20_6_3 10021 10197
+
+Comme le rapporte la figure \ref{fig:resObjFctMG}, la valeur optimale de la fonction économique obtenue avec la formulation G est inférieure a la valeur obtenue avec la formulation M, hormis pour six instances.
+La faiblesse pointée par \citet{Gelareh2015} dans la formulation M et la correction proposée avec la formulation G apparait justifiée numériquement mais sans toutefois dominer sur toutes les instances.
+En regardant de plus près les valeurs dans les tables \ref{tab:M_results} et \ref{tab:G_results}, c'est la partie cout opérationnel qui est plus élevée dans les solutions optimales obtenues avec la formulation M.
+Par contre le cout de pénalité dans les solutions optimales apparait equivalent dans les deux formulations, avec une valeur légèrement à l'avantage de la formulation M pour 16 instances.
+La formulation M élabore donc des solutions optimales avec un meilleur nombre de transfert, ce que illustrent les figures \ref{fig:resNbrTfsMG} et \ref{fig:resDiffTfsMG} qui rapportent le nombre de transferts de palettes réalisés dans les solutions optimales pour les deux formulations.
+Ceci invalide numériquement l'affirmation qui avance que la formulation G  permet d'effectuer davantage de transferts de palettes que la formulation M. 
+En effet, tres souvent les deux formulations donnent le même nombre de transfert comme le montre la figure \ref{fig:resDiffTfsMG}; et quand ce n'est pas le cas, la formulation M rapporte un nombre de transfert tres légèrement supérieur.
+
+Vu d'un exploitant de terminal de cross-docking, cette nuance peut s'avérer sensible. 
+En effet, il apparait raisonnable de souhaiter optimiser en première priorité le nombre de palettes transférées, et optimiser en seconde priorité l'utilisation du terminal en réduisant le temps passé par les palettes dans le terminal.
+Une utilisation optimisée du terminal offre la possibilité d'anticiper le départ des camions des docks. 
+
+Ces observations faites sur les résultats numériques issus des formulations M et G justifient la transition à l'elaboration de solutions optimales à l'aide de la formulation bi-objectif 2R proposée qui permet notamment de rapporter des solutions lexicographiquement optimales.
+
+
+%\vspace{10mm}
+%The results numerically confirm the assertions presented in \citep{Gelareh2015,Gelareh2021}. Indeed, for all the instances, the optimal value of the objective function is higher for formulation M than the formulation G, notably due to the extra transportation costs discussed in Section \ref{sec:extratransportationcosts} and a lower penality occuring in the solution since the optimal number of pallets transferred is higher for formulation G than the formulation M, since in formulation G the temporary storage in the crossdock is allowed as discussed in Section \ref{sec:temporary storage}.
+
+%Although it is not a main topic here, the CPU times used by GUROBI are in the same orders of magnitude for both formulations (except for a few instances where the time measured with formulation G is significantly higher). 
  \color{black}
  
 \begin{figure}[h!]
   \begin{center}
+   \begin{subfigure}{1\textwidth}
+      \includegraphics[scale=0.45]{images/resultsMGtime.png}
+      \caption{Comparison elapsed time  collected for each instance. When a $y$ value is equal to 600, the corresponding optimal solution is not available.}
+      \label{fig:resTimeMG}
+    \end{subfigure}
+    %
     \begin{subfigure}{1\textwidth}
       \includegraphics[scale=0.45]{images/resultsMGobjFct.png}
       \caption{Comparison of objective values collected for each instance. When a $y$ value is equal to 0, the corresponding optimal solution is not available.}
       \label{fig:resObjFctMG}
-    \end{subfigure}
-    %
-    \begin{subfigure}{1\textwidth}
-      \includegraphics[scale=0.45]{images/resultsMGtime.png}
-      \caption{Comparison elapsed time  collected for each instance. When a $y$ value is equal to 600, the corresponding optimal solution is not available.}
-      \label{fig:resTimeMG}
     \end{subfigure}
     %
   \end{center}
@@ -1214,7 +1282,7 @@ Although it is not a main topic here, the CPU times used by GUROBI are in the sa
     %
     \begin{subfigure}{1\textwidth}
       \includegraphics[scale=0.45]{images/resultsMGdifference.png}
-      \caption{Positive difference on number of transfers  collected for each instance solved to optimality for both formulations. ``\texttt{M}'' means the difference is in favor of formulation M,  ``\texttt{=}'' means there is no difference between the two formulations.}
+      \caption{Positive difference on number of transfers  collected for each instance solved to optimality for both formulations. ``\texttt{M}'' means the difference is in favor of formulation M, ``\texttt{G}'' means the difference is in favor of formulation G,  ``\texttt{=}'' means there is no difference between the two formulations.}
       \label{fig:resDiffTfsMG}
     \end{subfigure}
     %
@@ -1254,14 +1322,14 @@ Elles nous nous ont conduit à proposer une formulation 2R immédiatement dériv
 Ainsi cette formulation considère notamment deux fonctions objectif indépendamment et est plus fine dans la prise en compte des données au niveau des contraintes proposées.
 %
 Ensuite, les instances numériques utilisées dans les papiers relatifs aux formulations M et G questionnent également.
-En réponse à cela, une nouvelle famille d’instance numérique a été proposé. Les fichiers de données et le générateur permettant de produire ces données sont disponibles en ligne en Open source.
+En réponse à cela, une nouvelle famille d’instance numérique a été proposé. Les fichiers de données et le générateur permettant de produire ces données sont disponibles en ligne en Open source à \url{https://github.com/xgandibleux/TDAP}.
 %
 Enfin, des expérimentations numériques sont rapportées.
 Toutes les solutions produites par les trois modèles ont été obtenues avec un certificat d’optimalité.
 Les méthodes et techniques de résolution utilisées pour calculer les solutions sont génériques. 
 Implémentées en Julia et utilisant le langage de modélisation algébrique JuMP, la résolution des instances numériques présentée en entrée de l'une des trois formulations est obtenue avec le solveur GUROBI. Le package MOA qui propose une collection d'algorithmes multi-objectif est utilisé pour produire les solutions pour la formulation 2R. 
-%
-Les expérimentations numériques illustrent et confirment quantitativement un certain nombre d’hypothèses avancées dans les discussions rapportées.
+
+Les expérimentations numériques .... %illustrent et confirment quantitativement un certain nombre d’hypothèses avancées dans les discussions rapportées.
 
 *** perspectives ***
 \color{black}
@@ -1774,79 +1842,79 @@ The capacity problem discussed in Section \ref{sec:palletnotTransferred} does no
 
 %Table \ref{tab:M_vs_G_results} gives a comparison of results between formulations M and G
 
-\begin{table}[h!]
-  \hspace{1.5cm}
-  \vspace{0.5cm}
-  \centering
-{\scriptsize
-        \begin{tabular}{|c||c|c|c||c|c|c|}
-            \cline{2-7}
-             \multicolumn{1}{c|}{} & \multicolumn{3}{|c||}{Formulation M} & \multicolumn{3}{c|}{Formulation G} \\
-             \hline
-            Instances  & ObjValue & CPUtime (s) & \#Transfers  & ObjValue & CPUtime (s) & \#Transfers \\ 
-            \hline
-10\_3\_0 &  6363 &     1.030 &        9 		&  4880 &     1.318 &       14 \\
-10\_3\_1 & 16198 &     0.038 &        6 		& 14539 &     0.095 &       11 \\
-10\_3\_2 & 12143 &     0.052 &        9 		& 10875 &     0.233 &       12 \\
-\hline
-12\_4\_0 & 20914 &     0.193 &        6 		& 18468 &     0.456 &       11 \\
-12\_4\_1 & 17960 &     0.387 &        7 		& 14039 &     0.557 &       17 \\
-12\_4\_2 & 15945 &     0.401 &        8 		& 12263 &     0.553 &       18 \\
-12\_6\_0 & 18291 &     0.855 &        7 		& 16211 &     1.293 &       14 \\
-12\_6\_1 & 13769 &     1.157 &        6 		&  9510 &     1.693 &       19 \\
-12\_6\_2 & 18429 &     0.668 &        3 		& 13123 &     0.879 &       18 \\
-\hline
-14\_4\_0 & 18574 &     1.445 &        7 		& 12909 &     0.899 &       25 \\
-14\_4\_1 & 13829 &     1.449 &       13 		&  8918 &     1.266 &       25 \\
-14\_4\_2 & 17901 &     0.770 &       14 		& 14925 &     1.393 &       24 \\
-14\_6\_0 & 21707 &     3.315 &        7 		& 16753 &     2.046 &       21 \\
-14\_6\_1 & 18899 &     1.912 &        7 		& 14276 &     1.308 &       21 \\
-14\_6\_2 & 20533 &     2.227 &        6 		& 15794 &     2.197 &       18 \\
-\hline
-16\_4\_0 & 23990 &     3.287 &       13 		& 15373 &     2.407 &       38 \\
-16\_4\_1 & 24447 &     1.440 &       13 		& 18493 &     1.672 &       31 \\
-16\_4\_2 & 18294 &     1.864 &        8 		& 14532 &     0.917 &       23 \\
-16\_6\_0 & 22735 &     1.661 &       12 		& 19118 &     2.211 &       19 \\
-16\_6\_1 & 25353 &     5.745 &        7 		& 17515 &     5.547 &       30 \\
-16\_6\_2 & 21905 &     2.072 &        9 		& 17724 &     2.271 &       21 \\
-\hline
-18\_4\_0 & 21282 &     1.994 &       18 		& 15132 &     1.914 &       35 \\
-18\_4\_1 & 20692 &     2.251 &       12 		& 11332 &     2.883 &       44 \\
-18\_4\_2 & 25881 &     1.231 &       14 		& 21227 &     1.770 &       29 \\
-18\_6\_0 & 24915 &     4.251 &       11 		& 19133 &     5.355 &       28 \\
-18\_6\_1 & 32609 &     7.860 &        9 		& 25762 &     9.684 &       32 \\
-18\_6\_2 & 26472 &     4.662 &       10 		& 19226 &     5.826 &       31 \\
-\hline
-20\_6\_0 & 42740 &     8.304 &        9 		& 34005 &    10.718 &       38 \\
-20\_6\_1 & 34333 &    13.353 &       10 		& 25639 &    23.567 &       38 \\
-20\_6\_2 & 27743 &     8.626 &       12 		& 18694 &    15.630 &       37 \\
-20\_8\_0 & 24744 &     8.042 &        8 		& 18072 &    20.371 &       30 \\
-20\_8\_1 & 31871 &    16.987 &       11 		& 24040 &   104.488 &       35 \\
-20\_8\_2 & 27822 &    23.785 &        9 		& 20324 &    52.347 &       32 \\
-\hline
-25\_6\_0 & 30570 &    33.979 &       14 		& 21240 &    15.393 &       42 \\
-25\_6\_1 & 33874 &    34.386 &       18 		& 22701 &    39.297 &       48 \\
-25\_6\_2 & 38473 &    23.276 &       14 		& 26005 &    83.644 &       47 \\
-25\_8\_0 & 31322 &    67.869 &       20 		& 22090 &  1009.776 &       46 \\
-25\_8\_1 & 36180 &    84.203 &       10 		& 27835 &    91.959 &       32 \\
-25\_8\_2 & 40509 &    79.604 &       13 		& 29523 &   174.266 &       41 \\
-\hline
-30\_6\_0 & 33621 &    33.383 &       22 		& 22824 &    15.567 &       56 \\
-30\_6\_1 & 38746 &    45.391 &       22 		& 26037 &    98.530 &       60 \\
-30\_6\_2 & 38578 &    49.607 &       19 		& 23759 &    50.611 &       64 \\
-30\_8\_0 & 42964 &   108.180 &      17 		& 31307 &   329.787 &       59 \\
-30\_8\_1 & 43888 &   111.697 &       21 		& 29313 &  2603.717 &       60 \\
-30\_8\_2 & 44768 &   229.062 &      16 		& 29750 &   649.032 &       64 \\
-%
-%35\_8\_0 & 42243 $^*$             &  $\geq$ 2700 &       26 		& 32230 &   261.887 &       51 \\
-%35\_8\_1 & 54379 &  1034.155 &       26 		& 39102 &   623.569 &       68 \\
-%35\_8\_2 & 49087 $^*$              &  $\geq$ 2700 &       22 		& 35708 &   729.574 &       60 \\
-\hline
-        \end{tabular}
-        }
-        \caption{Comparison of results between formulations M and G}
-    \label{tab:M_vs_G_results}
-\end{table}
+%\begin{table}[h!]
+%  \hspace{1.5cm}
+%  \vspace{0.5cm}
+%  \centering
+%{\scriptsize
+%        \begin{tabular}{|c||c|c|c||c|c|c|}
+%            \cline{2-7}
+%             \multicolumn{1}{c|}{} & \multicolumn{3}{|c||}{Formulation M} & \multicolumn{3}{c|}{Formulation G} \\
+%             \hline
+%            Instances  & ObjValue & CPUtime (s) & \#Transfers  & ObjValue & CPUtime (s) & \#Transfers \\ 
+%            \hline
+%10\_3\_0 &  6363 &     1.030 &        9 		&  4880 &     1.318 &       14 \\
+%10\_3\_1 & 16198 &     0.038 &        6 		& 14539 &     0.095 &       11 \\
+%10\_3\_2 & 12143 &     0.052 &        9 		& 10875 &     0.233 &       12 \\
+%\hline
+%12\_4\_0 & 20914 &     0.193 &        6 		& 18468 &     0.456 &       11 \\
+%12\_4\_1 & 17960 &     0.387 &        7 		& 14039 &     0.557 &       17 \\
+%12\_4\_2 & 15945 &     0.401 &        8 		& 12263 &     0.553 &       18 \\
+%12\_6\_0 & 18291 &     0.855 &        7 		& 16211 &     1.293 &       14 \\
+%12\_6\_1 & 13769 &     1.157 &        6 		&  9510 &     1.693 &       19 \\
+%12\_6\_2 & 18429 &     0.668 &        3 		& 13123 &     0.879 &       18 \\
+%\hline
+%14\_4\_0 & 18574 &     1.445 &        7 		& 12909 &     0.899 &       25 \\
+%14\_4\_1 & 13829 &     1.449 &       13 		&  8918 &     1.266 &       25 \\
+%14\_4\_2 & 17901 &     0.770 &       14 		& 14925 &     1.393 &       24 \\
+%14\_6\_0 & 21707 &     3.315 &        7 		& 16753 &     2.046 &       21 \\
+%14\_6\_1 & 18899 &     1.912 &        7 		& 14276 &     1.308 &       21 \\
+%14\_6\_2 & 20533 &     2.227 &        6 		& 15794 &     2.197 &       18 \\
+%\hline
+%16\_4\_0 & 23990 &     3.287 &       13 		& 15373 &     2.407 &       38 \\
+%16\_4\_1 & 24447 &     1.440 &       13 		& 18493 &     1.672 &       31 \\
+%16\_4\_2 & 18294 &     1.864 &        8 		& 14532 &     0.917 &       23 \\
+%16\_6\_0 & 22735 &     1.661 &       12 		& 19118 &     2.211 &       19 \\
+%16\_6\_1 & 25353 &     5.745 &        7 		& 17515 &     5.547 &       30 \\
+%16\_6\_2 & 21905 &     2.072 &        9 		& 17724 &     2.271 &       21 \\
+%\hline
+%18\_4\_0 & 21282 &     1.994 &       18 		& 15132 &     1.914 &       35 \\
+%18\_4\_1 & 20692 &     2.251 &       12 		& 11332 &     2.883 &       44 \\
+%18\_4\_2 & 25881 &     1.231 &       14 		& 21227 &     1.770 &       29 \\
+%18\_6\_0 & 24915 &     4.251 &       11 		& 19133 &     5.355 &       28 \\
+%18\_6\_1 & 32609 &     7.860 &        9 		& 25762 &     9.684 &       32 \\
+%18\_6\_2 & 26472 &     4.662 &       10 		& 19226 &     5.826 &       31 \\
+%\hline
+%20\_6\_0 & 42740 &     8.304 &        9 		& 34005 &    10.718 &       38 \\
+%20\_6\_1 & 34333 &    13.353 &       10 		& 25639 &    23.567 &       38 \\
+%20\_6\_2 & 27743 &     8.626 &       12 		& 18694 &    15.630 &       37 \\
+%20\_8\_0 & 24744 &     8.042 &        8 		& 18072 &    20.371 &       30 \\
+%20\_8\_1 & 31871 &    16.987 &       11 		& 24040 &   104.488 &       35 \\
+%20\_8\_2 & 27822 &    23.785 &        9 		& 20324 &    52.347 &       32 \\
+%\hline
+%25\_6\_0 & 30570 &    33.979 &       14 		& 21240 &    15.393 &       42 \\
+%25\_6\_1 & 33874 &    34.386 &       18 		& 22701 &    39.297 &       48 \\
+%25\_6\_2 & 38473 &    23.276 &       14 		& 26005 &    83.644 &       47 \\
+%25\_8\_0 & 31322 &    67.869 &       20 		& 22090 &  1009.776 &       46 \\
+%25\_8\_1 & 36180 &    84.203 &       10 		& 27835 &    91.959 &       32 \\
+%25\_8\_2 & 40509 &    79.604 &       13 		& 29523 &   174.266 &       41 \\
+%\hline
+%30\_6\_0 & 33621 &    33.383 &       22 		& 22824 &    15.567 &       56 \\
+%30\_6\_1 & 38746 &    45.391 &       22 		& 26037 &    98.530 &       60 \\
+%30\_6\_2 & 38578 &    49.607 &       19 		& 23759 &    50.611 &       64 \\
+%30\_8\_0 & 42964 &   108.180 &      17 		& 31307 &   329.787 &       59 \\
+%30\_8\_1 & 43888 &   111.697 &       21 		& 29313 &  2603.717 &       60 \\
+%30\_8\_2 & 44768 &   229.062 &      16 		& 29750 &   649.032 &       64 \\
+%%
+%%35\_8\_0 & 42243 $^*$             &  $\geq$ 2700 &       26 		& 32230 &   261.887 &       51 \\
+%%35\_8\_1 & 54379 &  1034.155 &       26 		& 39102 &   623.569 &       68 \\
+%%35\_8\_2 & 49087 $^*$              &  $\geq$ 2700 &       22 		& 35708 &   729.574 &       60 \\
+%\hline
+%        \end{tabular}
+%        }
+%        \caption{Comparison of results between formulations M and G}
+%    \label{tab:M_vs_G_results}
+%\end{table}
 
 
 \begin{table}[h!]
@@ -1891,8 +1959,8 @@ The capacity problem discussed in Section \ref{sec:palletnotTransferred} does no
   data\_16\_6\_0 & 198.037 & 11542 & 556 & 10986 & 46 & 12 & 54.76 \\
   data\_16\_6\_1 & 115.055 & 3485 & 806 & 2679 & 81 & 14 & 90.0 \\
   data\_16\_6\_2 & 310.591 & 8146 & 528 & 7618 & 55 & 12 & 69.62 \\
-  data\_16\_6\_3 & N.A. & . & . & . & . & . & . \\
-  data\_16\_6\_4 & N.A. & . & . & . & . & . & . \\
+  data\_16\_6\_3 & 600.0 & . & . & . & . & . & . \\
+  data\_16\_6\_4 & 600.0 & . & . & . & . & . & . \\
   data\_18\_4\_0 & 34.08 & 10910 & 656 & 10254 & 50 & 14 & 56.82 \\
   data\_18\_4\_1 & 53.474 & 2653 & 1352 & 1301 & 87 & 17 & 94.57 \\
   data\_18\_4\_2 & 19.571 & 12854 & 368 & 12486 & 54 & 13 & 56.25 \\
@@ -1900,29 +1968,29 @@ The capacity problem discussed in Section \ref{sec:palletnotTransferred} does no
   data\_18\_4\_4 & 68.957 & 9799 & 486 & 9313 & 59 & 14 & 60.2 \\
   data\_18\_6\_0 & 226.138 & 6615 & 1148 & 5467 & 72 & 15 & 76.6 \\
   data\_18\_6\_1 & 195.451 & 8506 & 842 & 7664 & 83 & 15 & 75.45 \\
-  data\_18\_6\_2 & N.A. & . & . & . & . & . & . \\
+  data\_18\_6\_2 & 600.0 & . & . & . & . & . & . \\
   data\_18\_6\_3 & 204.135 & 9988 & 662 & 9326 & 63 & 14 & 64.95 \\
-  data\_18\_6\_4 & N.A. & . & . & . & . & . & . \\
+  data\_18\_6\_4 & 600.0 & . & . & . & . & . & . \\
   data\_20\_6\_0 & 477.613 & 18159 & 976 & 17183 & 84 & 16 & 61.31 \\
-  data\_20\_6\_1 & N.A. & . & . & . & . & . & . \\
-  data\_20\_6\_2 & N.A. & . & . & . & . & . & . \\
+  data\_20\_6\_1 & 600.0 & . & . & . & . & . & . \\
+  data\_20\_6\_2 & 600.0 & . & . & . & . & . & . \\
   data\_20\_6\_3 & 484.95 & 10963 & 942 & 10021 & 72 & 16 & 68.57 \\
-  data\_20\_6\_4 & N.A. & . & . & . & . & . & . \\
-  data\_20\_8\_0 & N.A. & . & . & . & . & . & . \\
-  data\_20\_8\_1 & N.A. & . & . & . & . & . & . \\
-  data\_20\_8\_2 & N.A. & . & . & . & . & . & . \\
-  data\_20\_8\_3 & N.A. & . & . & . & . & . & . \\
-  data\_20\_8\_4 & N.A. & . & . & . & . & . & . \\
-  data\_25\_6\_0 & N.A. & . & . & . & . & . & . \\
-  data\_25\_6\_1 & N.A. & . & . & . & . & . & . \\
-  data\_25\_6\_2 & N.A. & . & . & . & . & . & . \\
-  data\_25\_6\_3 & N.A. & . & . & . & . & . & . \\
-  data\_25\_6\_4 & N.A. & . & . & . & . & . & . \\
-  data\_25\_8\_0 & N.A. & . & . & . & . & . & . \\
-  data\_25\_8\_1 & N.A. & . & . & . & . & . & . \\
-  data\_25\_8\_2 & N.A. & . & . & . & . & . & . \\
-  data\_25\_8\_3 & N.A. & . & . & . & . & . & . \\
-  data\_25\_8\_4 & N.A. & . & . & . & . & . & . \\
+  data\_20\_6\_4 & 600.0 & . & . & . & . & . & . \\
+  data\_20\_8\_0 & 600.0 & . & . & . & . & . & . \\
+  data\_20\_8\_1 & 600.0 & . & . & . & . & . & . \\
+  data\_20\_8\_2 & 600.0 & . & . & . & . & . & . \\
+  data\_20\_8\_3 & 600.0 & . & . & . & . & . & . \\
+  data\_20\_8\_4 & 600.0 & . & . & . & . & . & . \\
+  data\_25\_6\_0 & 600.0 & . & . & . & . & . & . \\
+  data\_25\_6\_1 & 600.0 & . & . & . & . & . & . \\
+  data\_25\_6\_2 & 600.0 & . & . & . & . & . & . \\
+  data\_25\_6\_3 & 600.0 & . & . & . & . & . & . \\
+  data\_25\_6\_4 & 600.0 & . & . & . & . & . & . \\
+  data\_25\_8\_0 & 600.0 & . & . & . & . & . & . \\
+  data\_25\_8\_1 & 600.0 & . & . & . & . & . & . \\
+  data\_25\_8\_2 & 600.0 & . & . & . & . & . & . \\
+  data\_25\_8\_3 & 600.0 & . & . & . & . & . & . \\
+  data\_25\_8\_4 & 600.0 & . & . & . & . & . & . \\
   \hline
 \end{tabular}
         }
@@ -1991,20 +2059,20 @@ The capacity problem discussed in Section \ref{sec:palletnotTransferred} does no
   data\_20\_6\_3 & 134.17 & 10432 & 235 & 10197 & 71 & 16 & 67.62 \\
   data\_20\_6\_4 & 116.109 & 10924 & 271 & 10653 & 69 & 16 & 65.09 \\
   data\_20\_8\_0 & 396.362 & 2176 & 353 & 1823 & 87 & 19 & 93.55 \\
-  data\_20\_8\_1 & N.A. & . & . & . & . & . & . \\
-  data\_20\_8\_2 & N.A. & . & . & . & . & . & . \\
-  data\_20\_8\_3 & N.A. & . & . & . & . & . & . \\
-  data\_20\_8\_4 & N.A. & . & . & . & . & . & . \\
+  data\_20\_8\_1 & 600.0 & . & . & . & . & . & . \\
+  data\_20\_8\_2 & 600.0 & . & . & . & . & . & . \\
+  data\_20\_8\_3 & 600.0 & . & . & . & . & . & . \\
+  data\_20\_8\_4 & 600.0 & . & . & . & . & . & . \\
   data\_25\_6\_0 & 248.723 & 7881 & 301 & 7580 & 88 & 21 & 75.21 \\
   data\_25\_6\_1 & 319.343 & 9627 & 267 & 9360 & 95 & 22 & 76.0 \\
   data\_25\_6\_2 & 298.268 & 6853 & 477 & 6376 & 110 & 22 & 82.09 \\
   data\_25\_6\_3 & 496.524 & 12345 & 456 & 11889 & 99 & 20 & 68.75 \\
   data\_25\_6\_4 & 196.427 & 10633 & 510 & 10123 & 110 & 20 & 74.83 \\
-  data\_25\_8\_0 & N.A. & . & . & . & . & . & . \\
-  data\_25\_8\_1 & N.A. & . & . & . & . & . & . \\
-  data\_25\_8\_2 & N.A. & . & . & . & . & . & . \\
-  data\_25\_8\_3 & N.A. & . & . & . & . & . & . \\
-  data\_25\_8\_4 & N.A. & . & . & . & . & . & . \\
+  data\_25\_8\_0 & 600.0 & . & . & . & . & . & . \\
+  data\_25\_8\_1 & 600.0 & . & . & . & . & . & . \\
+  data\_25\_8\_2 & 600.0 & . & . & . & . & . & . \\
+  data\_25\_8\_3 & 600.0 & . & . & . & . & . & . \\
+  data\_25\_8\_4 & 600.0 & . & . & . & . & . & . \\
   \hline
 \end{tabular}
         }
