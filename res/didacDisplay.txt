@@ -1,0 +1,320 @@
+julia> include("TDAP_main.jl")
+
+  TDAP: Solving single objective formulations M and G 
+
+  Load and compile the code...
+
+  instance ............. didactic
+  number of trucks...... 5
+  number of docks....... 3
+  maximum capacity ..... 813
+
+  arrival and departure time of trucks in minutes in [00:00;23:59] (hh.mm):
+      1   1046 (17:26)   1097 (18:17) 
+      2   1034 (17:14)   1097 (18:17) 
+      3   1155 (19:15)   1220 (20:20) 
+      4   1110 (18:30)   1156 (19:16) 
+      5   1187 (19:47)   1249 (20:49) 
+
+  operational times (minutes) from k to l:
+      0   1   4
+      1   0   3
+      4   3   0
+
+  number of pallets to transfert from i to j:
+      .   .   .   .  33
+      .   .  36   .   .
+      .   .   .   8  50
+      .   .   8   .  52
+      .   .  24   .   .
+
+  transportation cost (€) from k to l:
+      0   1   1
+      1   0   2
+      1   2   0
+
+  penalities (€) from i to j:
+      .   .   .   .   8
+      .   .   8   .   .
+      .   .   .   8   8
+      .   .   9   .   8
+      .   .   8   .   .
+
+  1 iff truck i departs no later than truck j arrives, 0 otherwise:
+      0   0   1   1   1
+      0   0   1   1   1
+      1   1   0   0   0
+      1   1   0   0   1
+      1   1   0   1   0
+
+  Arrivals and departures of trucks at a time marker:
+      1    1034 (17:14)    [2]     Int64[]
+      2    1046 (17:26)    [1, 2]     Int64[]
+      3    1097 (18:17)    [1, 2]     [1, 2]
+      4    1097 (18:17)    [1, 2]     [1, 2]
+      5    1110 (18:30)    [1, 2, 4]     [1, 2]
+      6    1155 (19:15)    [1, 2, 3, 4]     [1, 2]
+      7    1156 (19:16)    [1, 2, 3, 4]     [1, 2, 4]
+      8    1187 (19:47)    [1, 2, 3, 4, 5]     [1, 2, 4]
+      9    1220 (20:20)    [1, 2, 3, 4, 5]     [1, 2, 3, 4]
+     10    1249 (20:49)    [1, 2, 3, 4, 5]     [1, 2, 3, 4, 5]
+Set parameter Username
+Academic license - for non-commercial use only - expires 2024-11-16
+ 
+  Optimal solution found (Formulation M):
+    CPUTime consumed: 0.019 sec
+
+    zOptimal................ 12
+      -> operational cost... 12
+      -> penalty cost....... 0
+
+    Assigment truck to dock:
+      truck  1 ⟶  dock  1 | arrival: 1046 (17:26) ⟶  departure: 1097 (18:17)
+      truck  2 ⟶  dock  2 | arrival: 1034 (17:14) ⟶  departure: 1097 (18:17)
+      truck  3 ⟶  dock  1 | arrival: 1155 (19:15) ⟶  departure: 1220 (20:20)
+      truck  4 ⟶  dock  2 | arrival: 1110 (18:30) ⟶  departure: 1156 (19:16)
+      truck  5 ⟶  dock  2 | arrival: 1187 (19:47) ⟶  departure: 1249 (20:49)
+
+    Transfert of pallets:
+      truck  1 ⟶  truck  5   from   dock  1 ⟶  dock  2   of   33 pallets
+      truck  2 ⟶  truck  3   from   dock  2 ⟶  dock  1   of   36 pallets
+      truck  3 ⟶  truck  4   from   dock  1 ⟶  dock  2   of    8 pallets
+      truck  3 ⟶  truck  5   from   dock  1 ⟶  dock  2   of   50 pallets
+      truck  4 ⟶  truck  3   from   dock  2 ⟶  dock  1   of    8 pallets
+      truck  4 ⟶  truck  5   from   dock  2 ⟶  dock  2   of   52 pallets
+      truck  5 ⟶  truck  3   from   dock  2 ⟶  dock  1   of   24 pallets
+
+      Number of transferts achieved: 7 | total transferts expected: 7 i.e. 100.0%
+    at the time marker r=1:
+      i=2 j=3 k=2 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 2] → [truck 3 | dock 1]
+    at the time marker r=1:  36 pallets entered into the terminal
+                              0 pallets taken out of the terminal
+                  i.e. 36 pallets ≤ 813
+
+    at the time marker r=2:
+      i=1 j=5 k=1 l=2 :   entrance of.. 33 pallets : [truck 1 | dock 1] → [truck 5 | dock 2]
+      i=2 j=3 k=2 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 2] → [truck 3 | dock 1]
+    at the time marker r=2:  69 pallets entered into the terminal
+                              0 pallets taken out of the terminal
+                  i.e. 69 pallets ≤ 813
+
+    at the time marker r=3:
+      i=1 j=5 k=1 l=2 :   entrance of.. 33 pallets : [truck 1 | dock 1] → [truck 5 | dock 2]
+      i=2 j=3 k=2 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 2] → [truck 3 | dock 1]
+    at the time marker r=3:  69 pallets entered into the terminal
+                              0 pallets taken out of the terminal
+                  i.e. 69 pallets ≤ 813
+
+    at the time marker r=4:
+      i=1 j=5 k=1 l=2 :   entrance of.. 33 pallets : [truck 1 | dock 1] → [truck 5 | dock 2]
+      i=2 j=3 k=2 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 2] → [truck 3 | dock 1]
+    at the time marker r=4:  69 pallets entered into the terminal
+                              0 pallets taken out of the terminal
+                  i.e. 69 pallets ≤ 813
+
+    at the time marker r=5:
+      i=1 j=5 k=1 l=2 :   entrance of.. 33 pallets : [truck 1 | dock 1] → [truck 5 | dock 2]
+      i=2 j=3 k=2 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 2] → [truck 3 | dock 1]
+      i=4 j=3 k=2 l=1 :   entrance of.. 8 pallets : [truck 4 | dock 2] → [truck 3 | dock 1]
+      i=4 j=5 k=2 l=2 :   entrance of.. 52 pallets : [truck 4 | dock 2] → [truck 5 | dock 2]
+    at the time marker r=5:  129 pallets entered into the terminal
+                              0 pallets taken out of the terminal
+                  i.e. 129 pallets ≤ 813
+
+    at the time marker r=6:
+      i=1 j=5 k=1 l=2 :   entrance of.. 33 pallets : [truck 1 | dock 1] → [truck 5 | dock 2]
+      i=2 j=3 k=2 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 2] → [truck 3 | dock 1]
+      i=3 j=4 k=1 l=2 :   entrance of.. 8 pallets : [truck 3 | dock 1] → [truck 4 | dock 2]
+      i=3 j=5 k=1 l=2 :   entrance of.. 50 pallets : [truck 3 | dock 1] → [truck 5 | dock 2]
+      i=4 j=3 k=2 l=1 :   entrance of.. 8 pallets : [truck 4 | dock 2] → [truck 3 | dock 1]
+      i=4 j=5 k=2 l=2 :   entrance of.. 52 pallets : [truck 4 | dock 2] → [truck 5 | dock 2]
+    at the time marker r=6:  187 pallets entered into the terminal
+                              0 pallets taken out of the terminal
+                  i.e. 187 pallets ≤ 813
+
+    at the time marker r=7:
+      i=1 j=5 k=1 l=2 :   entrance of.. 33 pallets : [truck 1 | dock 1] → [truck 5 | dock 2]
+      i=2 j=3 k=2 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 2] → [truck 3 | dock 1]
+      i=3 j=4 k=1 l=2 :   entrance of.. 8 pallets : [truck 3 | dock 1] → [truck 4 | dock 2]
+      i=3 j=5 k=1 l=2 :   entrance of.. 50 pallets : [truck 3 | dock 1] → [truck 5 | dock 2]
+      i=4 j=3 k=2 l=1 :   entrance of.. 8 pallets : [truck 4 | dock 2] → [truck 3 | dock 1]
+      i=4 j=5 k=2 l=2 :   entrance of.. 52 pallets : [truck 4 | dock 2] → [truck 5 | dock 2]
+      i=3 j=4 k=1 l=2 :   exit of ..... 8 pallets : [truck 3 | dock 1] → [truck 4 | dock 2]
+    at the time marker r=7:  187 pallets entered into the terminal
+                              8 pallets taken out of the terminal
+                  i.e. 179 pallets ≤ 813
+
+    at the time marker r=8:
+      i=1 j=5 k=1 l=2 :   entrance of.. 33 pallets : [truck 1 | dock 1] → [truck 5 | dock 2]
+      i=2 j=3 k=2 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 2] → [truck 3 | dock 1]
+      i=3 j=4 k=1 l=2 :   entrance of.. 8 pallets : [truck 3 | dock 1] → [truck 4 | dock 2]
+      i=3 j=5 k=1 l=2 :   entrance of.. 50 pallets : [truck 3 | dock 1] → [truck 5 | dock 2]
+      i=4 j=3 k=2 l=1 :   entrance of.. 8 pallets : [truck 4 | dock 2] → [truck 3 | dock 1]
+      i=4 j=5 k=2 l=2 :   entrance of.. 52 pallets : [truck 4 | dock 2] → [truck 5 | dock 2]
+      i=5 j=3 k=2 l=1 :   entrance of.. 24 pallets : [truck 5 | dock 2] → [truck 3 | dock 1]
+      i=3 j=4 k=1 l=2 :   exit of ..... 8 pallets : [truck 3 | dock 1] → [truck 4 | dock 2]
+    at the time marker r=8:  211 pallets entered into the terminal
+                              8 pallets taken out of the terminal
+                  i.e. 203 pallets ≤ 813
+
+    at the time marker r=9:
+      i=1 j=5 k=1 l=2 :   entrance of.. 33 pallets : [truck 1 | dock 1] → [truck 5 | dock 2]
+      i=2 j=3 k=2 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 2] → [truck 3 | dock 1]
+      i=3 j=4 k=1 l=2 :   entrance of.. 8 pallets : [truck 3 | dock 1] → [truck 4 | dock 2]
+      i=3 j=5 k=1 l=2 :   entrance of.. 50 pallets : [truck 3 | dock 1] → [truck 5 | dock 2]
+      i=4 j=3 k=2 l=1 :   entrance of.. 8 pallets : [truck 4 | dock 2] → [truck 3 | dock 1]
+      i=4 j=5 k=2 l=2 :   entrance of.. 52 pallets : [truck 4 | dock 2] → [truck 5 | dock 2]
+      i=5 j=3 k=2 l=1 :   entrance of.. 24 pallets : [truck 5 | dock 2] → [truck 3 | dock 1]
+      i=2 j=3 k=2 l=1 :   exit of ..... 36 pallets : [truck 2 | dock 2] → [truck 3 | dock 1]
+      i=3 j=4 k=1 l=2 :   exit of ..... 8 pallets : [truck 3 | dock 1] → [truck 4 | dock 2]
+      i=4 j=3 k=2 l=1 :   exit of ..... 8 pallets : [truck 4 | dock 2] → [truck 3 | dock 1]
+      i=5 j=3 k=2 l=1 :   exit of ..... 24 pallets : [truck 5 | dock 2] → [truck 3 | dock 1]
+    at the time marker r=9:  211 pallets entered into the terminal
+                              76 pallets taken out of the terminal
+                  i.e. 135 pallets ≤ 813
+
+    at the time marker r=10:
+      i=1 j=5 k=1 l=2 :   entrance of.. 33 pallets : [truck 1 | dock 1] → [truck 5 | dock 2]
+      i=2 j=3 k=2 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 2] → [truck 3 | dock 1]
+      i=3 j=4 k=1 l=2 :   entrance of.. 8 pallets : [truck 3 | dock 1] → [truck 4 | dock 2]
+      i=3 j=5 k=1 l=2 :   entrance of.. 50 pallets : [truck 3 | dock 1] → [truck 5 | dock 2]
+      i=4 j=3 k=2 l=1 :   entrance of.. 8 pallets : [truck 4 | dock 2] → [truck 3 | dock 1]
+      i=4 j=5 k=2 l=2 :   entrance of.. 52 pallets : [truck 4 | dock 2] → [truck 5 | dock 2]
+      i=5 j=3 k=2 l=1 :   entrance of.. 24 pallets : [truck 5 | dock 2] → [truck 3 | dock 1]
+      i=1 j=5 k=1 l=2 :   exit of ..... 33 pallets : [truck 1 | dock 1] → [truck 5 | dock 2]
+      i=2 j=3 k=2 l=1 :   exit of ..... 36 pallets : [truck 2 | dock 2] → [truck 3 | dock 1]
+      i=3 j=4 k=1 l=2 :   exit of ..... 8 pallets : [truck 3 | dock 1] → [truck 4 | dock 2]
+      i=3 j=5 k=1 l=2 :   exit of ..... 50 pallets : [truck 3 | dock 1] → [truck 5 | dock 2]
+      i=4 j=3 k=2 l=1 :   exit of ..... 8 pallets : [truck 4 | dock 2] → [truck 3 | dock 1]
+      i=4 j=5 k=2 l=2 :   exit of ..... 52 pallets : [truck 4 | dock 2] → [truck 5 | dock 2]
+      i=5 j=3 k=2 l=1 :   exit of ..... 24 pallets : [truck 5 | dock 2] → [truck 3 | dock 1]
+    at the time marker r=10:  211 pallets entered into the terminal
+                              211 pallets taken out of the terminal
+                  i.e. 0 pallets ≤ 813
+
+Set parameter Username
+Academic license - for non-commercial use only - expires 2024-11-16
+ 
+  Optimal solution found (Formulation G):
+    CPUTime consumed: 0.008 sec
+
+    zOptimal................ 67
+      -> operational cost... 3
+      -> penalty cost....... 64
+
+    Assigment truck to dock:
+      truck  1 ⟶  dock  2 | arrival: 1046 (17:26) ⟶  departure: 1097 (18:17)
+      truck  2 ⟶  dock  1 | arrival: 1034 (17:14) ⟶  departure: 1097 (18:17)
+      truck  3 ⟶  dock  1 | arrival: 1155 (19:15) ⟶  departure: 1220 (20:20)
+      truck  4 ⟶  dock  2 | arrival: 1110 (18:30) ⟶  departure: 1156 (19:16)
+      truck  5 ⟶  dock  2 | arrival: 1187 (19:47) ⟶  departure: 1249 (20:49)
+
+    Transfert of pallets:
+      truck  1 ⟶  truck  5   from   dock  2 ⟶  dock  2   of   33 pallets
+      truck  2 ⟶  truck  3   from   dock  1 ⟶  dock  1   of   36 pallets
+      truck  3 ⟶  truck  5   from   dock  1 ⟶  dock  2   of   50 pallets
+      truck  4 ⟶  truck  3   from   dock  2 ⟶  dock  1   of    8 pallets
+      truck  4 ⟶  truck  5   from   dock  2 ⟶  dock  2   of   52 pallets
+      truck  5 ⟶  truck  3   from   dock  2 ⟶  dock  1   of   24 pallets
+
+      Number of transferts achieved: 6 | total transferts expected: 7 i.e. 85.71%
+    at the time marker r=1:
+      i=2 j=3 k=1 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 1] → [truck 3 | dock 1]
+    at the time marker r=1:  36 pallets entered into the terminal
+                              0 pallets taken out of the terminal
+                  i.e. 36 pallets ≤ 813
+
+    at the time marker r=2:
+      i=1 j=5 k=2 l=2 :   entrance of.. 33 pallets : [truck 1 | dock 2] → [truck 5 | dock 2]
+      i=2 j=3 k=1 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 1] → [truck 3 | dock 1]
+    at the time marker r=2:  69 pallets entered into the terminal
+                              0 pallets taken out of the terminal
+                  i.e. 69 pallets ≤ 813
+
+    at the time marker r=3:
+      i=1 j=5 k=2 l=2 :   entrance of.. 33 pallets : [truck 1 | dock 2] → [truck 5 | dock 2]
+      i=2 j=3 k=1 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 1] → [truck 3 | dock 1]
+    at the time marker r=3:  69 pallets entered into the terminal
+                              0 pallets taken out of the terminal
+                  i.e. 69 pallets ≤ 813
+
+    at the time marker r=4:
+      i=1 j=5 k=2 l=2 :   entrance of.. 33 pallets : [truck 1 | dock 2] → [truck 5 | dock 2]
+      i=2 j=3 k=1 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 1] → [truck 3 | dock 1]
+    at the time marker r=4:  69 pallets entered into the terminal
+                              0 pallets taken out of the terminal
+                  i.e. 69 pallets ≤ 813
+
+    at the time marker r=5:
+      i=1 j=5 k=2 l=2 :   entrance of.. 33 pallets : [truck 1 | dock 2] → [truck 5 | dock 2]
+      i=2 j=3 k=1 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 1] → [truck 3 | dock 1]
+      i=4 j=3 k=2 l=1 :   entrance of.. 8 pallets : [truck 4 | dock 2] → [truck 3 | dock 1]
+      i=4 j=5 k=2 l=2 :   entrance of.. 52 pallets : [truck 4 | dock 2] → [truck 5 | dock 2]
+    at the time marker r=5:  129 pallets entered into the terminal
+                              0 pallets taken out of the terminal
+                  i.e. 129 pallets ≤ 813
+
+    at the time marker r=6:
+      i=1 j=5 k=2 l=2 :   entrance of.. 33 pallets : [truck 1 | dock 2] → [truck 5 | dock 2]
+      i=2 j=3 k=1 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 1] → [truck 3 | dock 1]
+      i=3 j=5 k=1 l=2 :   entrance of.. 50 pallets : [truck 3 | dock 1] → [truck 5 | dock 2]
+      i=4 j=3 k=2 l=1 :   entrance of.. 8 pallets : [truck 4 | dock 2] → [truck 3 | dock 1]
+      i=4 j=5 k=2 l=2 :   entrance of.. 52 pallets : [truck 4 | dock 2] → [truck 5 | dock 2]
+    at the time marker r=6:  179 pallets entered into the terminal
+                              0 pallets taken out of the terminal
+                  i.e. 179 pallets ≤ 813
+
+    at the time marker r=7:
+      i=1 j=5 k=2 l=2 :   entrance of.. 33 pallets : [truck 1 | dock 2] → [truck 5 | dock 2]
+      i=2 j=3 k=1 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 1] → [truck 3 | dock 1]
+      i=3 j=5 k=1 l=2 :   entrance of.. 50 pallets : [truck 3 | dock 1] → [truck 5 | dock 2]
+      i=4 j=3 k=2 l=1 :   entrance of.. 8 pallets : [truck 4 | dock 2] → [truck 3 | dock 1]
+      i=4 j=5 k=2 l=2 :   entrance of.. 52 pallets : [truck 4 | dock 2] → [truck 5 | dock 2]
+    at the time marker r=7:  179 pallets entered into the terminal
+                              0 pallets taken out of the terminal
+                  i.e. 179 pallets ≤ 813
+
+    at the time marker r=8:
+      i=1 j=5 k=2 l=2 :   entrance of.. 33 pallets : [truck 1 | dock 2] → [truck 5 | dock 2]
+      i=2 j=3 k=1 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 1] → [truck 3 | dock 1]
+      i=3 j=5 k=1 l=2 :   entrance of.. 50 pallets : [truck 3 | dock 1] → [truck 5 | dock 2]
+      i=4 j=3 k=2 l=1 :   entrance of.. 8 pallets : [truck 4 | dock 2] → [truck 3 | dock 1]
+      i=4 j=5 k=2 l=2 :   entrance of.. 52 pallets : [truck 4 | dock 2] → [truck 5 | dock 2]
+      i=5 j=3 k=2 l=1 :   entrance of.. 24 pallets : [truck 5 | dock 2] → [truck 3 | dock 1]
+    at the time marker r=8:  203 pallets entered into the terminal
+                              0 pallets taken out of the terminal
+                  i.e. 203 pallets ≤ 813
+
+    at the time marker r=9:
+      i=1 j=5 k=2 l=2 :   entrance of.. 33 pallets : [truck 1 | dock 2] → [truck 5 | dock 2]
+      i=2 j=3 k=1 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 1] → [truck 3 | dock 1]
+      i=3 j=5 k=1 l=2 :   entrance of.. 50 pallets : [truck 3 | dock 1] → [truck 5 | dock 2]
+      i=4 j=3 k=2 l=1 :   entrance of.. 8 pallets : [truck 4 | dock 2] → [truck 3 | dock 1]
+      i=4 j=5 k=2 l=2 :   entrance of.. 52 pallets : [truck 4 | dock 2] → [truck 5 | dock 2]
+      i=5 j=3 k=2 l=1 :   entrance of.. 24 pallets : [truck 5 | dock 2] → [truck 3 | dock 1]
+      i=2 j=3 k=1 l=1 :   exit of ..... 36 pallets : [truck 2 | dock 1] → [truck 3 | dock 1]
+      i=4 j=3 k=2 l=1 :   exit of ..... 8 pallets : [truck 4 | dock 2] → [truck 3 | dock 1]
+      i=5 j=3 k=2 l=1 :   exit of ..... 24 pallets : [truck 5 | dock 2] → [truck 3 | dock 1]
+    at the time marker r=9:  203 pallets entered into the terminal
+                              68 pallets taken out of the terminal
+                  i.e. 135 pallets ≤ 813
+
+    at the time marker r=10:
+      i=1 j=5 k=2 l=2 :   entrance of.. 33 pallets : [truck 1 | dock 2] → [truck 5 | dock 2]
+      i=2 j=3 k=1 l=1 :   entrance of.. 36 pallets : [truck 2 | dock 1] → [truck 3 | dock 1]
+      i=3 j=5 k=1 l=2 :   entrance of.. 50 pallets : [truck 3 | dock 1] → [truck 5 | dock 2]
+      i=4 j=3 k=2 l=1 :   entrance of.. 8 pallets : [truck 4 | dock 2] → [truck 3 | dock 1]
+      i=4 j=5 k=2 l=2 :   entrance of.. 52 pallets : [truck 4 | dock 2] → [truck 5 | dock 2]
+      i=5 j=3 k=2 l=1 :   entrance of.. 24 pallets : [truck 5 | dock 2] → [truck 3 | dock 1]
+      i=1 j=5 k=2 l=2 :   exit of ..... 33 pallets : [truck 1 | dock 2] → [truck 5 | dock 2]
+      i=2 j=3 k=1 l=1 :   exit of ..... 36 pallets : [truck 2 | dock 1] → [truck 3 | dock 1]
+      i=3 j=5 k=1 l=2 :   exit of ..... 50 pallets : [truck 3 | dock 1] → [truck 5 | dock 2]
+      i=4 j=3 k=2 l=1 :   exit of ..... 8 pallets : [truck 4 | dock 2] → [truck 3 | dock 1]
+      i=4 j=5 k=2 l=2 :   exit of ..... 52 pallets : [truck 4 | dock 2] → [truck 5 | dock 2]
+      i=5 j=3 k=2 l=1 :   exit of ..... 24 pallets : [truck 5 | dock 2] → [truck 3 | dock 1]
+    at the time marker r=10:  203 pallets entered into the terminal
+                              203 pallets taken out of the terminal
+                  i.e. 0 pallets ≤ 813
+
+
+julia>
