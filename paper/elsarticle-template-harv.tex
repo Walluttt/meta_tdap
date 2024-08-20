@@ -50,6 +50,8 @@
 \usepackage{url}
 \usepackage{xcolor}
 \usepackage{subcaption}
+\usepackage{eurosym}
+%\usepackage{float}
 
 \journal{European Journal of Operational Research}
 
@@ -1167,11 +1169,370 @@ Gurobi Optimizer (version 10.0.3 build v10.0.3rc0 (mac64[x86]))  is used as MIP 
 %
 % ===
 %
-\subsubsection{Experiment 1: deep numerical analysis of formulations M and G on a didactic instance}\label{sec:didacticMG}
+\subsubsection{Experiment 1: detailed numerical analysis of formulations M and G on a didactic instance}\label{sec:didacticMG}
 
 This experiment examines in detail  the optimal solutions obtained by the M and G formulations on a didactic instance
  ``full mesh''.
+ %
+This instance is composed of 5 trucks and 3 docks.
+The  maximum capacity of the terminal is 813 pallets.
+%
+The previsional arrival and departure time of trucks into the format  (hh.mm), transformed in minutes in [00:00;23:59] is given by Table~\ref{tab:didacPlanningArrDepTrucks}.
+%\begin{table}[h]
+%
+%\begin{center}
+%\begin{tabular}{| c || c | c | c | c |}
+%\hline
+%truck ID ($i$) & \multicolumn{2}{c|}{arrival ($a_i$)} & \multicolumn{2}{c|}{departure ($d_i$)} \\
+% \cline{2-5}
+%& hh.mm & minutes &   hh.mm & minutes  \\
+%\hline
+%      1  & 17:26 & 1046  &  18:17 & 1097\\
+%      2  & 17:14 & 1034 & 18:17 &  1097 \\
+%      3  & 19:15 & 1155  & 20:20 &  1220 \\
+%      4  & 18:30 & 1110  & 19:16 &  1156 \\
+%      5  & 19:47 & 1187  & 20:49 &  1249\\
+%      \hline
+%\end{tabular}
+%\end{center}
+%\caption{Previsional planning  of trucks}
+%\label{tab:didacPlanningArrDepTrucks}
+%\end{table}%
 
+
+The previsional number of pallets  $f_{ij}$ to transfert from truck $i$ to truck $j$,
+the penalities $p_{ij}$ (\euro) when a transfert from $i$ to $j$ is not achieved, 
+the operational times (minutes)  $t_{kl}$ from $k$ to $l$, and 
+the transportation cost (\euro) $c_{kl}$ from $k$ to $l$
+are respectively given by 
+Table \ref{tab:didacPrePalettes},
+ \ref{tab:didacPenalites},
+ \ref{tab:didacCoutOpera}, and 
+ \ref{tab:didacCoutTransp}.
+ The Gantt chart depicted by Figure \ref{fig:didacGantt} illustrates the previsionnal planning of trucks and transferts of pallets.
+
+
+%\begin{minipage}[c]{0.45\textwidth}
+%\medskip
+%\centering
+%%
+%\begin{tabular}{c c|c c c c c|}
+%
+%        $f_{ij}$       &      & \multicolumn{5}{c|}{$j$} \\
+%        &     & 1 & 2 & 3 & 4 & 5 \\
+%\hline
+%        &  1 & . &   . &   . &   . &  33 \\
+%        &  2 & . &   . &  36 &   . &   . \\
+%      $i$ &  3 & . &   . &   .  &  8 &  50 \\
+%        &  4 & . &   . &   8  &  . &  52 \\
+%        &  5 & . &   . &  24 &   . &   . \\
+%\hline        
+%\end{tabular}
+%\captionof{table}{Previsional number of pallets  $f_{ij}$ to transfert from truck $i$ to truck $j$}
+%\label{tab:didacPrePalettes}
+%\end{minipage}
+%\hfill
+%\begin{minipage}[c]{0.45\textwidth}
+%\medskip
+%\centering
+%\begin{tabular}{c c|c c c c c|}
+%
+%        $p_{ij}$       &      & \multicolumn{5}{c|}{$j$} \\
+%        &     & 1 & 2 & 3 & 4 & 5 \\
+%\hline
+%        &  1 & . &  . &  . &  . &  8 \\
+%        &  2 & . &  . &  8 &  . &  . \\
+%      $i$ &  3 & . &  . &  .  & 8 &  8 \\
+%        &  4 & . &  . &  9 &  . &  8 \\
+%        &  5 & . &  . &  8 &  . &  . \\
+%\end{tabular}
+%\captionof{table}{Penalities $p_{ij}$ (\euro) from $i$ to $j$\\$\mbox{ }$ }
+%\label{tab:didacPenalites}
+%\medskip
+%\end{minipage} 
+
+
+
+%\begin{minipage}[c]{0.45\textwidth}
+%\medskip
+%\centering
+%%
+%\begin{tabular}{c c|c c c|}
+%
+%        $t_{kl}$       &      & \multicolumn{3}{c|}{$l$} \\
+%        &     & 1 & 2 & 3 \\        
+%        \hline
+%        &  1 &0 &  1 &  4 \\
+%     $k$    &  2 &      1 &  0 &  3 \\
+%        &  3 &      4 &  3 &  0 \\
+%        \hline   
+%\end{tabular}
+%\captionof{table}{Operational times (minutes)  $t_{kl}$ from $k$ to $l$:}
+%\label{tab:didacCoutOpera}
+%\medskip
+%\end{minipage}
+%\hfill
+%\begin{minipage}[c]{0.45\textwidth}
+%\medskip
+%\centering
+%\begin{tabular}{c c|c c c|}
+%        $c_{kl}$       &      & \multicolumn{3}{c|}{$l$} \\
+%        &     & 1 & 2 & 3 \\        
+%        \hline
+%        &  1 &0 &  1 &  1 \\
+%     $k$    &  2 &1 &  0 &  2 \\
+%        &  3 &1 &  2 &  0 \\
+%         \hline          
+%\end{tabular}
+%\captionof{table}{Transportation cost (\euro) $c_{kl}$ from $k$ to $l$:}
+%\label{tab:didacCoutTransp}
+%\medskip
+%\end{minipage} 
+
+
+%%%%%%
+\begin{table}[h]
+    \centering
+    
+    \begin{subtable}{0.90\linewidth}
+        \centering
+           \begin{tabular}{| c || c | c | c | c |}
+           \hline
+           truck ID ($i$) & \multicolumn{2}{c|}{arrival ($a_i$)} & \multicolumn{2}{c|}{departure ($d_i$)} \\
+            \cline{2-5}
+           & hh.mm & minutes &   hh.mm & minutes  \\
+           \hline
+                 1  & 17:26 & 1046  &  18:17 & 1097\\
+                 2  & 17:14 & 1034 & 18:17 &  1097 \\
+                 3  & 19:15 & 1155  & 20:20 &  1220 \\
+                 4  & 18:30 & 1110  & 19:16 &  1156 \\
+                 5  & 19:47 & 1187  & 20:49 &  1249\\
+                 \hline
+           \end{tabular}
+           \caption{Previsional planning  of trucks.}
+           \label{tab:didacPlanningArrDepTrucks}
+    \end{subtable}%
+    \vspace{3mm}
+    
+    \begin{subtable}{0.45\linewidth}
+        \centering
+            \begin{tabular}{c c|c c c c c|}
+
+            $f_{ij}$       &      & \multicolumn{5}{c|}{$j$} \\
+            &     & 1 & 2 & 3 & 4 & 5 \\
+            \hline
+            &  1 & . &   . &   . &   . &  33 \\
+            &  2 & . &   . &  36 &   . &   . \\
+            $i$ &  3 & . &   . &   .  &  8 &  50 \\
+            &  4 & . &   . &   8  &  . &  52 \\
+            &  5 & . &   . &  24 &   . &   . \\
+            \hline        
+            \end{tabular}
+            \caption{Previsional number of pallets  $f_{ij}$ to transfert from truck $i$ to truck $j$.}
+            \label{tab:didacPrePalettes}
+    \end{subtable}
+    \hfill
+    \begin{subtable}{0.45\linewidth}
+        \centering
+            \begin{tabular}{c c|c c c c c|}
+
+             $p_{ij}$       &      & \multicolumn{5}{c|}{$j$} \\
+            &     & 1 & 2 & 3 & 4 & 5 \\
+            \hline
+            &  1 & . &  . &  . &  . &  8 \\
+            &  2 & . &  . &  8 &  . &  . \\
+            $i$ &  3 & . &  . &  .  & 8 &  8 \\
+            &  4 & . &  . &  9 &  . &  8 \\
+            &  5 & . &  . &  8 &  . &  . \\
+            \end{tabular}
+            \caption{Penalities $p_{ij}$ (\euro) from $i$ to $j$.\\$\mbox{ }$ }
+            \label{tab:didacPenalites}
+    \end{subtable}
+    \vspace{3mm}
+    
+    \begin{subtable}{0.45\linewidth}
+        \centering
+            \begin{tabular}{c c|c c c|}
+
+            $t_{kl}$       &      & \multicolumn{3}{c|}{$l$} \\
+            &     & 1 & 2 & 3 \\        
+            \hline
+            &  1 &0 &  1 &  4 \\
+            $k$    &  2 &      1 &  0 &  3 \\
+            &  3 &      4 &  3 &  0 \\
+            \hline   
+            \end{tabular}
+            \caption{Operational times (minutes)  $t_{kl}$ from $k$ to $l$.}
+            \label{tab:didacCoutOpera}
+    \end{subtable}
+    \hfill
+    \begin{subtable}{0.45\linewidth}
+        \centering
+            \begin{tabular}{c c|c c c|}
+            $c_{kl}$       &      & \multicolumn{3}{c|}{$l$} \\
+            &     & 1 & 2 & 3 \\        
+             \hline
+            &  1 &0 &  1 &  1 \\
+            $k$    &  2 &1 &  0 &  2 \\
+            &  3 &1 &  2 &  0 \\
+             \hline          
+            \end{tabular}
+            \caption{Transportation cost (\euro) $c_{kl}$ from $k$ to $l$.}
+            \label{tab:didacCoutTransp}
+    \end{subtable}
+
+    \caption{Data describing the didactic instance.}
+    \label{tab:dataDidac}
+\end{table}
+%%%%%%
+
+The information deduced from the data are (1) $\delta_{ij}$, the time conflicts between trucks to be assigned on a same dock (1 iff $[a_i,d_i] \cap [a_j,d_j]$ is empty, 0 otherwise), and (2) the time markers $\tau$. They are reported in Tables \ref{tab:didacConflicts}~and~\ref{tab:timeMarkers} respectively.
+
+    \begin{table}[h]
+        \centering
+            \begin{tabular}{c c|c c c c c|}
+
+             $\delta_{ij}$       &      & \multicolumn{5}{c|}{$j$} \\
+            &     & 1 & 2 & 3 & 4 & 5 \\
+            \hline
+            &&  0  &  0 &  1 &  1 &  1 \\
+            &&  0  &  0 &  1 &  1 &  1 \\
+            &$i$ &  1 &  1 &  0 &  0 &  0 \\
+            &&  1  &  1 &  0 &  0 &  1 \\
+            &&  1  &  1 &  0 &  1 &  0 \\
+            \end{tabular}
+            \caption{$\delta_{ij}$,  time conflicts between trucks  $i$ and $j$ to be assigned on a same dock (1 if no conflict, 0 otherwise).\\$\mbox{ }$ }
+            \label{tab:didacConflicts}
+    \end{table}
+
+    \begin{table}[h]
+        \centering
+           \begin{tabular}{| c || c | c | c | c | c |}
+           \hline
+           id ($r$) & \multicolumn{2}{c|}{time marker ($\tau_r$)}  & \multicolumn{1}{c|}{arrivals (\texttt{atr[r]})} & \multicolumn{1}{c|}{departures (\texttt{dtr[r]})} \\
+            \cline{2-5}
+           & hh.mm & minutes & list of trucks $i$ &  list of trucks $j$ \\
+           \hline
+              1 &   17:14 & 1034   &  [2]     & [ ] \\
+              2 &   17:26 & 1046   &  [1, 2]   &  [ ] \\
+              3 &   18:17 & 1097   &  [1, 2]  &   [1, 2] \\
+              4 &   18:17 & 1097   &  [1, 2]   &  [1, 2] \\
+              5 &   18:30 & 1110    & [1, 2, 4]  &   [1, 2] \\
+              6 &   19:15 & 1155    &  [1, 2, 3, 4]  &   [1, 2] \\
+              7 &   19:16 & 1156    &  [1, 2, 3, 4]  &   [1, 2, 4] \\
+              8 &   19:47 & 1187    &  [1, 2, 3, 4, 5]  &   [1, 2, 4] \\
+              9 &   20:20 & 1220    &  [1, 2, 3, 4, 5]  &   [1, 2, 3, 4] \\
+              10 & 20:49 & 1249    &   [1, 2, 3, 4, 5]  &   [1, 2, 3, 4, 5] \\
+                 \hline
+           \end{tabular}
+           \caption{Arrivals and departures of trucks at a time marker. For example, at the 2nd ($r=2$) time marker ($\tau_2 =$ 17:26), trucks 1 and 2 are arrived (\texttt{atr[2]=[1,2]}), none departure of truck (\texttt{dtr[2]=[]}).}
+           \label{tab:timeMarkers}
+    \end{table}
+    
+ 
+ \begin{figure}[t!]
+       \centering
+      \includegraphics[scale=0.5]{images/didacGantt.png}
+%
+  \caption{Previsionnal planning of trucks and transferts of pallets.}
+   \label{fig:didacGantt}
+\end{figure}
+
+An optimal solution obtained respectively with formulation M and formulation G is given in Table \ref{tab:didacOptimalMG}, where Table \ref{tab:didacOptSol} given the assigments of trucks to docks and Table \ref{tab:didacTransPallets} reports the transfert of pallets.
+%
+The value of the objective function for an optimal solution obtained with formulation M is equal to 12, which is also the value of the operational cost. Indeed, all the transferts awaited (7 transferts) are fulfilled (ratio of 100.0\%), thus the penalty cost is equal to 0.
+%
+With the formulation G,  the value of the objective function for an optimal solution obtained   is equal to 67, with an operational cost of 3 and a  penalty cost of 64. Indeed, only 6 transferts on the 7 awaited are fulfilled (ratio of 85.71\%).
+%
+For the two optimal solutions collected, Figures \ref{fig:didacLoadFormulationM} and  \ref{fig:didacLoadFormulationG}  illustrates the evolution of the load in the terminal in term of pallets respectively for formulation M and G.
+%
+This numerical result obtained with a didactic instance shows that an optimal  solution obtained with formulation G may be dominated than an optimal solution obtained with M.
+
+
+%    \begin{table}[h]
+%        \centering
+\begin{table}[h]
+    \centering
+    
+    \begin{subtable}{0.90\linewidth}
+        \centering        
+           \begin{tabular}{| c | c | c | c || c | c | c | c |}
+           \hline
+            \multicolumn{4}{|c||}{Formulation M}  & \multicolumn{4}{c|}{Formulation G} \\
+            \cline{1-4}  \cline{5-8}
+            truck &dock & arrival &  departure & truck &dock & arrival &  departure\\
+           \hline
+                1 &    1 & 17:26 & 18:17        & 1   &  2 & 17:26 & 18:17 \\
+                2 &    2 & 17:14 & 18:17        & 2   &  1 & 17:14 & 18:17 \\
+                3 &    1 & 19:15 & 20:20        & 3   &  1 & 19:15 & 20:20 \\
+                4 &    2  & 18:30 & 19:16       & 4   &  2 & 18:30 & 19:16 \\
+                5 &    2  & 19:47 & 20:49       & 5   &  2 & 19:47 & 20:49 \\
+                 \hline
+           \end{tabular}
+           \caption{Assigment trucks to docks.}
+           \label{tab:didacOptSol}
+    \end{subtable}
+    \vspace{5mm}
+
+    \begin{subtable}{0.90\linewidth}
+        \centering
+           \begin{tabular}{| c | c | c | c | c || c | c | c | c | c |}
+           \hline
+            \multicolumn{5}{|c||}{Formulation M}  & \multicolumn{5}{c|}{Formulation G} \\
+            \hline
+            \multicolumn{2}{|c|}{\quad trucks \quad }   & \multicolumn{2}{|c|}{\quad  docks \quad }   & \# pallets &  \multicolumn{2}{|c|}{\quad  trucks \quad }  & \multicolumn{2}{|c|}{\quad  docks \quad }   & \# pallets\\
+            \cline{1-4}  \cline{6-9}
+             \multicolumn{2}{|c|}{$i \rightarrow j$} &  \multicolumn{2}{|c|}{$k \rightarrow l$} &  &   \multicolumn{2}{|c|}{$i \rightarrow j$} &  \multicolumn{2}{|c|}{$k \rightarrow l$} & \\
+           \hline
+        \multicolumn{2}{|c|}{1 $\rightarrow$  5}   &  \multicolumn{2}{|c|}{1 $\rightarrow$  2}   &   33       &  1 &  5   &  \multicolumn{2}{|c|}{2 $\rightarrow$  2}   &   33 \\
+         \multicolumn{2}{|c|}{2 $\rightarrow$  3}   &  \multicolumn{2}{|c|}{2 $\rightarrow$  1}   &   36       &  2 &  3   &  \multicolumn{2}{|c|}{1 $\rightarrow$  1}   &   36 \\
+         \multicolumn{2}{|c|}{3 $\rightarrow$  4}   & \multicolumn{2}{|c|}{1 $\rightarrow$  2}   &    8         &  3 &  5   &  \multicolumn{2}{|c|}{1 $\rightarrow$  2}   &   50\\
+         \multicolumn{2}{|c|}{3 $\rightarrow$  5}   &  \multicolumn{2}{|c|}{1 $\rightarrow$  2}   &   50       &  4 &  3   &  \multicolumn{2}{|c|}{2 $\rightarrow$  1}   &    8 \\
+         \multicolumn{2}{|c|}{4 $\rightarrow$  3}   &  \multicolumn{2}{|c|}{2 $\rightarrow$  1}   &    8        &  4 &  5   &  \multicolumn{2}{|c|}{2 $\rightarrow$  2}   &   52\\
+         \multicolumn{2}{|c|}{4 $\rightarrow$  5}   &  \multicolumn{2}{|c|}{2 $\rightarrow$  2}   &   52       &  5 &  3   & \multicolumn{2}{|c|}{ 2 $\rightarrow$  1}   &   24\\
+         \multicolumn{2}{|c|}{5 $\rightarrow$  3}   &  \multicolumn{2}{|c|}{2 $\rightarrow$  1}   &   24       &  \multicolumn{2}{|c|}{ } & \multicolumn{2}{|c|}{ } & \\
+            \hline
+           \end{tabular}
+           \caption{Transfert of pallets.}
+           \label{tab:didacTransPallets}
+    \end{subtable}
+
+    \caption{Optimal solution collected with each formulation.}
+    \label{tab:didacOptimalMG}
+\end{table}           
+
+
+ 
+ 
+
+\begin{figure}[t!]
+%
+\begin{minipage}[c]{0.5\linewidth}
+   \begin{subfigure}[t]{0.95\textwidth}
+       \centering
+      \includegraphics[scale=0.35]{images/didacLoadFormulationM.png}
+      \caption{Result for formulation M.}
+      \label{fig:didacLoadFormulationM}
+    \end{subfigure}
+\end{minipage} 
+%
+\hfill
+%
+\begin{minipage}[c]{0.5\linewidth}
+    \begin{subfigure}[t]{0.95\textwidth}
+        \centering
+      \includegraphics[scale=0.35]{images/didacLoadFormulationG.png}
+      \caption{Result for formulation G.}
+      \label{fig:didacLoadFormulationG}
+    \end{subfigure}
+\end{minipage}
+%
+  \caption{Evolution of the load in the terminal in term of pallets.}
+   \label{fig:didacLoadMG}
+\end{figure}
+
+\clearpage
+\newpage
 %
 % ===
 %
@@ -1300,6 +1661,8 @@ Ces observations faites sur les résultats numériques issus des formulations M 
    \label{fig:res2MG}
 \end{figure}
 
+\clearpage
+\newpage
 %
 % ===
 %

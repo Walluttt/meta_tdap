@@ -17,8 +17,8 @@ println("  Load and compile the code...")
 
 using Printf             # to format the output
 using JuMP               # Algebraic modeling language to manage a MIP model
-#using GLPK               # to use the GLPK MIP solver
-using Gurobi            # to use the Gurobi MIP solver
+using GLPK               # to use the GLPK MIP solver
+#using Gurobi            # to use the Gurobi MIP solver
 using PyPlot             # to draw graphics
 using DataFrames, CSV    # to manage dataframes
 using PrettyTables       # to export table (dataframe) in latex
@@ -31,10 +31,10 @@ include("TDAP_formulations.jl")
 include("TDAP_graphics.jl")
 include("TDAP_tools.jl")
 
-global experiment = false      # true → perform all the instances | false → perform one instance
-global display    = true     # true → output information in the terminal | false → nothing 
-global graphic    = true     # true → output information graphically  | false → nothing
-IPsolver = Gurobi.Optimizer   # Setup the IP solver with GLPK → GLPK.Optimizer
+global experiment = false     # true → perform all the instances | false → perform one instance
+global display    = true      # true → output information in the terminal | false → nothing 
+global graphic    = true      # true → output information graphically  | false → nothing
+IPsolver = GLPK.Optimizer     # Setup the IP solver with GLPK → GLPK.Optimizer
 timeLimit = 600.0             # Setup the time limit (seconds) allowed to the MIP solver
 #IPsolver = Gurobi.Optimizer  # Setup the IP solver with Gurobi → Gurobi.Optimizer
 
@@ -47,7 +47,7 @@ if !experiment
     # 1 instance only
 
     path = "../../data/singleObjective/didactic/"
-    fnames = ["contreexemple"]
+    fnames = ["didactic"]
 
     #path = "../../data/singleObjective/singleObjectiveGelareh2016/data_10_3/"
     #fnames = ["data_10_3_0"]
