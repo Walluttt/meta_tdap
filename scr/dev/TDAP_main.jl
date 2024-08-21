@@ -58,7 +58,7 @@ else
     # a collection of instances
 
     path = "../../data/singleObjective/singleObjectiveGelareh2016/"
-    fnames = setfnameTest() # vector with all the filenames of instances available in folder given by path
+    fnames = setfname() # vector with all the filenames of instances available in folder given by path
 
 end
 nInstances = length(fnames)
