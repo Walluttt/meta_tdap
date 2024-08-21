@@ -163,6 +163,28 @@ function queryOptimalSolutionMonoObj(t_elapsed::Float64, mod::Model, instance::I
     sol_zOptPenalty =  Int(round(penality))
 
     # -------------------------------------------------------------------------
+    # measure using the definition of 2R 
+
+    objFct1 = 0.0
+    for i=1:n, j=1:n, k=1:m, l=1:m
+        objFct1 =  objFct1 + instance.t[k,l] * value(mod[:z][i,j,k,l])
+    end
+    sol_zOpt1 = Int(round(objFct1))
+    
+        
+    objFct2 = 0.0
+    for i=1:n
+        for j=1:n
+            som = 0
+            for k=1:m, l=1:m
+                som = som + value(mod[:z][i,j,k,l])
+            end
+            objFct2 = objFct2 + instance.f[i,j] * som
+        end
+    end
+    sol_zOpt2 = Int(round(objFct2))
+
+    # -------------------------------------------------------------------------
     
     nTruckAssigned = 0
 
@@ -194,5 +216,73 @@ function queryOptimalSolutionMonoObj(t_elapsed::Float64, mod::Model, instance::I
 
     # -------------------------------------------------------------------------
 
-    return Solution(sol_tElapsed, sol_zOpt, sol_zOptCost, sol_zOptPenalty, sol_nTruckAssigned, sol_nTransfertDone, sol_pTransfertDone)
+    return Solution(sol_tElapsed, sol_zOpt, sol_zOptCost, sol_zOptPenalty, sol_zOpt1, sol_zOpt2, sol_nTruckAssigned, sol_nTransfertDone, sol_pTransfertDone)
+end
+
+
+# -----------------------------------------------------------------------------
+# Query the optimal solution obtained
+
+function queryOptimalSolutionMultiObj(t_elapsed::Float64, mod::Model, instance::Instance)
+
+    # -------------------------------------------------------------------------    
+    # Splitting the values stored in instances in separated variables (Destructuring Assignment)
+    (; name, n,m, a,d, t,f,c,p, C) = instance
+
+    # -------------------------------------------------------------------------
+    sol_tElapsed = trunc(t_elapsed, digits=3)
+
+    # -------------------------------------------------------------------------
+    objFct1 = 0.0
+    for i=1:n, j=1:n, k=1:m, l=1:m
+        objFct1 =  objFct1 + instance.t[k,l] * value(mod[:z][i,j,k,l])
+    end
+    sol_zOpt1 = Int(round(objFct1))
+
+    
+    objFct2 = 0.0
+    for i=1:n
+        for j=1:n
+            som = 0
+            for k=1:m, l=1:m
+                som = som + value(mod[:z][i,j,k,l])
+            end
+            objFct2 = objFct2 + instance.f[i,j] * som
+        end
+    end
+    sol_zOpt2 = Int(round(objFct2))
+
+    # -------------------------------------------------------------------------
+    
+    nTruckAssigned = 0
+
+    y = copy(value.(mod[:y]))
+    for i=1:n
+        k = findfirst(isequal(1),y[i,:])
+        if  typeof(k) != Nothing
+            nTruckAssigned+=1
+        end
+    end
+
+    sol_nTruckAssigned = nTruckAssigned
+
+
+    nTransfertDone = 0
+    for i=1:n, j=1:n
+        if instance.f[i,j] > 0
+            for k=1:m, l=1:m
+                if value(mod[:z][i,j,k,l])==1
+                    nTransfertDone += 1
+                end
+            end
+        end
+    end
+    totalNumberTransfertsPlanned = count(!iszero, instance.f)
+ 
+    sol_nTransfertDone = nTransfertDone
+    sol_pTransfertDone = round(nTransfertDone / totalNumberTransfertsPlanned * 100 ; digits=2)
+
+    # -------------------------------------------------------------------------
+
+    return Solution2R(sol_tElapsed, sol_zOpt1, sol_zOpt2, sol_nTruckAssigned, sol_nTransfertDone, sol_pTransfertDone)
 end

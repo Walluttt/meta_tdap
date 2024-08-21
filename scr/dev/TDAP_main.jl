@@ -23,6 +23,7 @@ using PyPlot             # to draw graphics
 using DataFrames, CSV    # to manage dataframes
 using PrettyTables       # to export table (dataframe) in latex
 
+
 include("TDAP_datastructures.jl")
 include("TDAP_filesManagement.jl")
 include("TDAP_display.jl")
@@ -31,9 +32,10 @@ include("TDAP_formulations.jl")
 include("TDAP_graphics.jl")
 include("TDAP_tools.jl")
 
-global experiment = false     # true → perform all the instances | false → perform one instance
-global display    = true      # true → output information in the terminal | false → nothing 
-global graphic    = true      # true → output information graphically  | false → nothing
+
+global experiment = true     # true → perform all the instances | false → perform one instance
+global display = false     # true → output information in the terminal | false → nothing 
+global graphic = false     # true → output information graphically  | false → nothing
 IPsolver = GLPK.Optimizer     # Setup the IP solver with GLPK → GLPK.Optimizer
 timeLimit = 600.0             # Setup the time limit (seconds) allowed to the MIP solver
 #IPsolver = Gurobi.Optimizer  # Setup the IP solver with Gurobi → Gurobi.Optimizer
@@ -46,17 +48,17 @@ timeLimit = 600.0             # Setup the time limit (seconds) allowed to the MI
 if !experiment
     # 1 instance only
 
-    path = "../../data/singleObjective/didactic/"
-    fnames = ["didactic"]
+    #path = "../../data/singleObjective/didactic/"
+    #fnames = ["didactic"]
 
-    #path = "../../data/singleObjective/singleObjectiveGelareh2016/data_10_3/"
-    #fnames = ["data_10_3_0"]
+    path = "../../data/singleObjective/singleObjectiveGelareh2016/"
+    fnames = ["data_10_3_0"]
 
 else
     # a collection of instances
 
     path = "../../data/singleObjective/singleObjectiveGelareh2016/"
-    fnames = setfname() # vector with all the filenames of instances available in folder given by path
+    fnames = setfnameTest() # vector with all the filenames of instances available in folder given by path
 
 end
 nInstances = length(fnames)
@@ -69,20 +71,25 @@ nInstances = length(fnames)
 # ----------------------------------------------------------------------------
 # Vectors to store the optimal solutions
 
-all_OptSolutionM::Vector{Solution} = Vector{Solution}(undef,nInstances)
-all_OptSolutionG::Vector{Solution} = Vector{Solution}(undef,nInstances)
+all_OptSolutionM::Vector{Solution} = Vector{Solution}(undef, nInstances)
+all_OptSolutionG::Vector{Solution} = Vector{Solution}(undef, nInstances)
 
-if !display 
+all_OptSolution2M::Vector{Solution2R} = Vector{Solution2R}(undef, nInstances)
+all_OptSolution2G::Vector{Solution2R} = Vector{Solution2R}(undef, nInstances)
+
+if !display
     println("\n  Summary:")
-    @printf("    fname               " )
-    @printf(" | for" )
+    @printf("    fname               ")
+    @printf(" | for")
     @printf(" | time (s)")
     @printf(" |   zOpt")
     @printf(" | zOptCost")
     @printf(" | zOptPenalty")
+    @printf(" | totTimeTransfert")
+    @printf(" | totQtyTransfered")
     @printf(" | nTruckAssigned")
     @printf(" | nTransfertDone")
-    @printf(" | pTransfertDone (%%)\n")
+    @printf(" | %%TransfertDone (%%)\n")
 end
 
 for iInstance = 1:nInstances
@@ -96,14 +103,15 @@ for iInstance = 1:nInstances
     # -----------------------------------------------------------------------------
     # Compute the additionnal information required by the model and display it
     δ, tr, atr, dtr = processingInstance(instance)
-    display ? displayProcessing(δ, tr, atr, dtr, instance) : nothing 
+    display ? displayProcessing(δ, tr, atr, dtr, instance) : nothing
+
 
 
     # =============================================================================
-    # Formulation M
+    # Formulation M (single objective)
     # =============================================================================
 
-    display ? nothing : @printf("    %-20s |   M", fnames[iInstance] )
+    display ? nothing : @printf("    %-20s |   M", fnames[iInstance])
 
     # -----------------------------------------------------------------------------
     # Setup the model
@@ -113,9 +121,9 @@ for iInstance = 1:nInstances
 
     # -----------------------------------------------------------------------------
     # Compute the optimal solution
-    start  = time()
+    start = time()
     optimize!(modM)
-    t_elapsed = time()-start
+    t_elapsed = time() - start
 
     # -----------------------------------------------------------------------------
     # Query the optimal solution
@@ -125,7 +133,7 @@ for iInstance = 1:nInstances
         display ? displayOptimalSolution("Formulation M", t_elapsed, modM, instance) : nothing
         #@assert solution_checkerM(instance, δ, tr, modM) "Fatal error (with the formulation M) !!!"
         @assert solution_checkerValues(instance, modM) "Fatal error (optimal solution no valid) !!!"
-        graphic ? drawLoadTerminal("Formulation M", instance, tr, atr, dtr, modM, :yLim_Off) : nothing 
+        graphic ? drawLoadTerminal("Formulation M", instance, tr, atr, dtr, modM, :yLim_Off) : nothing
 
     elseif termination_status(modM) == TIME_LIMIT
 
@@ -143,17 +151,20 @@ for iInstance = 1:nInstances
         @printf(" | %6d", all_OptSolutionM[iInstance].zOpt)
         @printf(" |   %6d", all_OptSolutionM[iInstance].zOptCost)
         @printf(" |      %6d", all_OptSolutionM[iInstance].zOptPenalty)
+        @printf(" |         %8d", all_OptSolutionM[iInstance].totalTimeTransfert)
+        @printf(" |       %10d", all_OptSolutionM[iInstance].totalQuantityTransfered)
         @printf(" |             %2d", all_OptSolutionM[iInstance].nTruckAssigned)
         @printf(" |           %4d", all_OptSolutionM[iInstance].nTransfertDone)
         @printf(" |             %6.2f \n", all_OptSolutionM[iInstance].pTransfertDone)
     end
 
 
+
     # =============================================================================
-    # Formulation G
+    # Formulation G (single objective)
     # =============================================================================
 
-    display ? nothing : @printf("    %-20s |   G", fnames[iInstance] )
+    display ? nothing : @printf("    %-20s |   G", fnames[iInstance])
 
     # -----------------------------------------------------------------------------
     # Setup the model
@@ -163,18 +174,18 @@ for iInstance = 1:nInstances
 
     # -----------------------------------------------------------------------------
     # Compute the optimal solution
-    start  = time()
+    start = time()
     optimize!(modG)
-    t_elapsed = time()-start
+    t_elapsed = time() - start
 
     # -----------------------------------------------------------------------------
     # Query the optimal solution
     if termination_status(modG) == OPTIMAL
 
         all_OptSolutionG[iInstance] = queryOptimalSolutionMonoObj(t_elapsed, modG, instance)
-        display ? displayOptimalSolution("Formulation G", t_elapsed, modG, instance) : nothing 
+        display ? displayOptimalSolution("Formulation G", t_elapsed, modG, instance) : nothing
         @assert solution_checkerValues(instance, modG) "Fatal error (optimal solution no valid) !!!"
-        graphic ? drawLoadTerminal("Formulation G", instance, tr, atr, dtr, modG, :yLim_Off) : nothing 
+        graphic ? drawLoadTerminal("Formulation G", instance, tr, atr, dtr, modG, :yLim_Off) : nothing
 
     elseif termination_status(modG) == TIME_LIMIT
 
@@ -192,12 +203,212 @@ for iInstance = 1:nInstances
         @printf(" | %6d", all_OptSolutionG[iInstance].zOpt)
         @printf(" |   %6d", all_OptSolutionG[iInstance].zOptCost)
         @printf(" |      %6d", all_OptSolutionG[iInstance].zOptPenalty)
+        @printf(" |         %8d", all_OptSolutionG[iInstance].totalTimeTransfert)
+        @printf(" |       %10d", all_OptSolutionG[iInstance].totalQuantityTransfered)
         @printf(" |             %2d", all_OptSolutionG[iInstance].nTruckAssigned)
         @printf(" |           %4d", all_OptSolutionG[iInstance].nTransfertDone)
         @printf(" |             %6.2f \n", all_OptSolutionG[iInstance].pTransfertDone)
     end
 
+
+
+    # =============================================================================
+    # Formulation 2M "
+    # =============================================================================
+
+    display ? nothing : @printf("    %-20s |  2M", fnames[iInstance])
+
+    #=
+    # -----------------------------------------------------------------------------
+    # Setup the model / obj1
+    modObj1 = formulation_2M(instance, δ, atr, dtr, IPsolver, :obj1)
+    set_silent(modObj1)
+    set_time_limit_sec(modObj1, timeLimit)
+
+    # -----------------------------------------------------------------------------
+    # Compute the optimal solution
+    start  = time()
+    optimize!(modObj1)
+    t_elapsed = time()-start
+
+    if termination_status(modObj1) == OPTIMAL
+        display ? displayOptimalSolution2obj("Formulation obj1", t_elapsed, modObj1, instance) : nothing  
+    else
+        @assert false "No optimal solution found!!!"
+    end
+    =#
+
+
+    # -----------------------------------------------------------------------------
+    # Setup the model / obj2
+    modObj2M = formulation_2M(instance, δ, atr, dtr, IPsolver, :obj2)
+    set_silent(modObj2M)
+    set_time_limit_sec(modObj2M, timeLimit)
+
+    # -----------------------------------------------------------------------------
+    # Compute the optimal solution
+    start = time()
+    optimize!(modObj2M)
+    t_elapsed1 = time() - start
+
+    # -----------------------------------------------------------------------------
+    # Query the optimal solution
+    if termination_status(modObj2M) == OPTIMAL
+        display ? displayOptimalSolution2obj("Formulation 2M/obj2", t_elapsed1, modObj2M, instance) : nothing
+
+        # -----------------------------------------------------------------------------
+        # Setup the model / lex(obj2→obj1)
+        zOptObj2 = objective_value(modObj2M)
+
+        modObjLex21M = formulation_2M(instance, δ, atr, dtr, IPsolver, :obj1)
+        @constraint(modObjLex21M, obj2cst, sum((sum(instance.f[i, j] * modObjLex21M[:z][i, j, k, l] for k = 1:instance.m, l = 1:instance.m)) for i = 1:instance.n, j = 1:instance.n) == zOptObj2)
+        set_silent(modObjLex21M)
+        set_time_limit_sec(modObjLex21M, timeLimit)
+
+        # -----------------------------------------------------------------------------
+        # Compute the optimal solution
+        start = time()
+        optimize!(modObjLex21M)
+        t_elapsed2 = time() - start
+
+        if termination_status(modObjLex21M) == OPTIMAL
+            all_OptSolution2M[iInstance] = queryOptimalSolutionMultiObj(t_elapsed1 + t_elapsed2, modObjLex21M, instance)
+            display ? displayOptimalSolution2obj("Formulation 2M lex21", t_elapsed2, modObjLex21M, instance) : nothing
+            graphic ? drawLoadTerminal("Formulation 2M", instance, tr, atr, dtr, modObjLex21M, :yLim_Off) : nothing
+
+        elseif termination_status(modObjLex21M) == TIME_LIMIT
+
+            display ? println("Formulation 2M/obj 1: time limit reached") : nothing
+            all_OptSolutionM2[iInstance] = Solution2R(timeLimit, -1, -1, -1, -1, -1.0)
+
+        else
+
+            @assert false "No optimal solution found!!!"
+
+        end
+
+    elseif termination_status(modObj2M) == TIME_LIMIT
+
+        display ? println("Formulation 2M/obj 2: time limit reached") : nothing
+        all_OptSolutionM2[iInstance] = Solution2R(timeLimit, -1, -1, -1, -1, -1.0)
+
+    else
+
+        @assert false "No optimal solution found!!!"
+
+    end
+
+    if !display
+        @printf(" | %8.2f", all_OptSolution2M[iInstance].tElapsed)
+        @printf(" |      . |        . |           . | ")
+        @printf("        %8d", all_OptSolution2M[iInstance].z1TransfertTime)
+        @printf(" |       %10d", all_OptSolution2M[iInstance].z2QuantityTransfered)
+        @printf(" |             %2d", all_OptSolution2M[iInstance].nTruckAssigned)
+        @printf(" |           %4d", all_OptSolution2M[iInstance].nTransfertDone)
+        @printf(" |             %6.2f \n", all_OptSolution2M[iInstance].pTransfertDone)
+    end
+
+
+
+
+    # =============================================================================
+    # Formulation 2G "
+    # =============================================================================
+
+    display ? nothing : @printf("    %-20s |  2G", fnames[iInstance])
+
+    #=
+    # -----------------------------------------------------------------------------
+    # Setup the model / obj1
+    modObj1 = formulation_2G(instance, δ, atr, dtr, IPsolver, :obj1)
+    set_silent(modObj1)
+    set_time_limit_sec(modObj1, timeLimit)
+
+    # -----------------------------------------------------------------------------
+    # Compute the optimal solution
+    start  = time()
+    optimize!(modObj1)
+    t_elapsed = time()-start
+
+    if termination_status(modObj1) == OPTIMAL
+        display ? displayOptimalSolution2obj("Formulation obj1", t_elapsed, modObj1, instance) : nothing  
+    else
+        @assert false "No optimal solution found!!!"
+    end
+    =#
+
+
+    # -----------------------------------------------------------------------------
+    # Setup the model / obj2
+    modObj2 = formulation_2G(instance, δ, atr, dtr, IPsolver, :obj2)
+    set_silent(modObj2)
+    set_time_limit_sec(modObj2, timeLimit)
+
+    # -----------------------------------------------------------------------------
+    # Compute the optimal solution
+    start = time()
+    optimize!(modObj2)
+    t_elapsed1 = time() - start
+
+    # -----------------------------------------------------------------------------
+    # Query the optimal solution
+    if termination_status(modObj2) == OPTIMAL
+        display ? displayOptimalSolution2obj("Formulation 2G/obj2", t_elapsed1, modObj2, instance) : nothing
+
+        # -----------------------------------------------------------------------------
+        # Setup the model / lex(obj2→obj1)
+        zOptObj2 = objective_value(modObj2)
+
+        modObjLex21 = formulation_2G(instance, δ, atr, dtr, IPsolver, :obj1)
+        @constraint(modObjLex21, obj2cst, sum((sum(instance.f[i, j] * modObjLex21[:z][i, j, k, l] for k = 1:instance.m, l = 1:instance.m)) for i = 1:instance.n, j = 1:instance.n) == zOptObj2)
+        set_silent(modObjLex21)
+        set_time_limit_sec(modObjLex21, timeLimit)
+
+        # -----------------------------------------------------------------------------
+        # Compute the optimal solution
+        start = time()
+        optimize!(modObjLex21)
+        t_elapsed2 = time() - start
+
+        if termination_status(modObjLex21) == OPTIMAL
+            all_OptSolution2G[iInstance] = queryOptimalSolutionMultiObj(t_elapsed1 + t_elapsed2, modObjLex21, instance)
+            display ? displayOptimalSolution2obj("Formulation 2G lex21", t_elapsed2, modObjLex21, instance) : nothing
+            graphic ? drawLoadTerminal("Formulation 2G", instance, tr, atr, dtr, modObjLex21, :yLim_Off) : nothing
+
+        elseif termination_status(modObjLex21) == TIME_LIMIT
+
+            display ? println("Formulation 2G/obj 1: time limit reached") : nothing
+            all_OptSolutionG2[iInstance] = Solution2R(timeLimit, -1, -1, -1, -1, -1.0)
+
+        else
+
+            @assert false "No optimal solution found!!!"
+
+        end
+
+    elseif termination_status(modObj2) == TIME_LIMIT
+
+        display ? println("Formulation 2G/obj 2: time limit reached") : nothing
+        all_OptSolutionG2[iInstance] = Solution2R(timeLimit, -1, -1, -1, -1, -1.0)
+
+    else
+
+        @assert false "No optimal solution found!!!"
+
+    end
+
+    if !display
+        @printf(" | %8.2f", all_OptSolution2G[iInstance].tElapsed)
+        @printf(" |      . |        . |           . | ")
+        @printf("        %8d", all_OptSolution2G[iInstance].z1TransfertTime)
+        @printf(" |       %10d", all_OptSolution2G[iInstance].z2QuantityTransfered)
+        @printf(" |             %2d", all_OptSolution2G[iInstance].nTruckAssigned)
+        @printf(" |           %4d", all_OptSolution2G[iInstance].nTransfertDone)
+        @printf(" |             %6.2f \n", all_OptSolution2G[iInstance].pTransfertDone)
+    end
+
 end
+
 
 
 # =============================================================================
@@ -209,67 +420,67 @@ if experiment
     # -------------------------------------------------------------------------
     # Save the results into a DataFrame
 
-    dfM = DataFrame(Dict(n=>[getfield(x, n) for x in all_OptSolutionM] for n in fieldnames(Solution)))
+    dfM = DataFrame(Dict(n => [getfield(x, n) for x in all_OptSolutionM] for n in fieldnames(Solution)))
     dfM[!, :fname] = copy(fnames)
-    deleteat!(dfM,1)
-    CSV.write("allresultsM.csv", dfM[!, [8,4,5,6,7,1,2,3]])
+    deleteat!(dfM, 1)
+    CSV.write("allresultsM.csv", dfM[!, [8, 4, 5, 6, 7, 1, 2, 3]])
 
-    dfG = DataFrame(Dict(n=>[getfield(x, n) for x in all_OptSolutionG] for n in fieldnames(Solution)))
+    dfG = DataFrame(Dict(n => [getfield(x, n) for x in all_OptSolutionG] for n in fieldnames(Solution)))
     dfG[!, :fname] = copy(fnames)
-    deleteat!(dfG,1)
-    CSV.write("allresultsG.csv", dfG[!, [8,4,5,6,7,1,2,3]])
+    deleteat!(dfG, 1)
+    CSV.write("allresultsG.csv", dfG[!, [8, 4, 5, 6, 7, 1, 2, 3]])
 
 
     # -------------------------------------------------------------------------
     # save the results into latex tables
 
     open("resM.tex", "w") do f
-        pretty_table(f, dfM[!, [8,4,5,6,7,1,2,3]], backend = Val(:latex)) 
+        pretty_table(f, dfM[!, [8, 4, 5, 6, 7, 1, 2, 3]], backend=Val(:latex))
     end
 
     open("resG.tex", "w") do f
-        pretty_table(f, dfG[!, [8,4,5,6,7,1,2,3]], backend = Val(:latex)) 
+        pretty_table(f, dfG[!, [8, 4, 5, 6, 7, 1, 2, 3]], backend=Val(:latex))
     end
 
     # -------------------------------------------------------------------------
     # draw graphically the results
 
     # Time elapsed for instances solved to the optimum by the two formulations
-    figure("0. Comparison between formulations M and G", figsize = (12, 7.5))
+    figure("0. Comparison between formulations M and G", figsize=(12, 7.5))
     title("Elapsed time collected")
-    xticks(rotation = 60, ha = "right")
-    tick_params(labelsize = 6, axis = "x")
+    xticks(rotation=60, ha="right")
+    tick_params(labelsize=6, axis="x")
     xlabel("Name of datafiles")
     ylabel("Elapsed time (seconds)")
-    plot(dfM[!,:fname],dfM[!,:tElapsed], linewidth=1, marker="o", markersize=5, color="r", label ="formulation M")
-    plot(dfG[!,:fname],dfG[!,:tElapsed], linewidth=1, marker="s", markersize=5, color="b", label ="formulation G")
-    legend(loc=2, fontsize ="small")
+    plot(dfM[!, :fname], dfM[!, :tElapsed], linewidth=1, marker="o", markersize=5, color="r", label="formulation M")
+    plot(dfG[!, :fname], dfG[!, :tElapsed], linewidth=1, marker="s", markersize=5, color="b", label="formulation G")
+    legend(loc=2, fontsize="small")
     grid(color="gray", linestyle=":", linewidth=0.5)
     savefig("resultsMGtime.png")
 
     # Optimal value (when solved) for the aggregated objective function
-    figure("1. Comparison between formulations M and G", figsize = (12, 7.5))
+    figure("1. Comparison between formulations M and G", figsize=(12, 7.5))
     title("Optimal value of objective functions collected")
-    xticks(rotation = 60, ha = "right")
-    tick_params(labelsize = 6, axis = "x")
+    xticks(rotation=60, ha="right")
+    tick_params(labelsize=6, axis="x")
     xlabel("Name of datafiles")
     ylabel("Optimal value of objective functions")
-    plot(dfM[!,:fname],dfM[!,:zOpt], linewidth=1, marker="o", markersize=5, color="r", label ="formulation M")
-    plot(dfG[!,:fname],dfG[!,:zOpt], linewidth=1, marker="s", markersize=5, color="b", label ="formulation G")
-    legend(loc=2, fontsize ="small")
+    plot(dfM[!, :fname], dfM[!, :zOpt], linewidth=1, marker="o", markersize=5, color="r", label="formulation M")
+    plot(dfG[!, :fname], dfG[!, :zOpt], linewidth=1, marker="s", markersize=5, color="b", label="formulation G")
+    legend(loc=2, fontsize="small")
     grid(color="gray", linestyle=":", linewidth=0.5)
     savefig("resultsMGobjFct.png")
 
     # Optimal number of transfets between docks (when solved)
-    figure("2. Comparison between formulations M and G", figsize = (12, 7.5))
+    figure("2. Comparison between formulations M and G", figsize=(12, 7.5))
     title("Number of transfers collected")
-    xticks(rotation = 60, ha = "right")
-    tick_params(labelsize = 6, axis = "x")
+    xticks(rotation=60, ha="right")
+    tick_params(labelsize=6, axis="x")
     xlabel("Name of datafiles")
     ylabel("Number of transfers")
-    plot(dfM[!,:fname],dfM[!,:nTransfertDone], linewidth=1, marker="o", markersize=5, color="r", label ="formulation M")
-    plot(dfG[!,:fname],dfG[!,:nTransfertDone], linewidth=1, marker="s", markersize=5, color="b", label ="formulation G")
-    legend(loc=2, fontsize ="small")
+    plot(dfM[!, :fname], dfM[!, :nTransfertDone], linewidth=1, marker="o", markersize=5, color="r", label="formulation M")
+    plot(dfG[!, :fname], dfG[!, :nTransfertDone], linewidth=1, marker="s", markersize=5, color="b", label="formulation G")
+    legend(loc=2, fontsize="small")
     grid(color="gray", linestyle=":", linewidth=0.5)
     savefig("resultsMGnbrTft.png")
 
@@ -278,41 +489,41 @@ if experiment
     y_values = (Int64)[]
     facecolors = (String)[]
     winner = (String)[]
-    x_file = copy(dfM[!,:fname])
-    y_M = copy(dfM[!,:nTransfertDone])
-    y_G = copy(dfG[!,:nTransfertDone])
+    x_file = copy(dfM[!, :fname])
+    y_M = copy(dfM[!, :nTransfertDone])
+    y_G = copy(dfG[!, :nTransfertDone])
     for i in 1:length(y_M)
         if y_M[i] != -1 && y_G[i] != -1
             push!(x_values, x_file[i])
             if y_G[i] > y_M[i]
                 println(">")
                 push!(y_values, y_G[i] - y_M[i])
-                push!(facecolors,"blue")
-                push!(winner,"G")
+                push!(facecolors, "blue")
+                push!(winner, "G")
             elseif y_G[i] < y_M[i]
                 push!(y_values, y_M[i] - y_G[i])
-                push!(facecolors,"red")
-                push!(winner,"M")
+                push!(facecolors, "red")
+                push!(winner, "M")
             else
                 push!(y_values, 0)
-                push!(facecolors,"black")
-                push!(winner,"=")
+                push!(facecolors, "black")
+                push!(winner, "=")
             end
         end
     end
     edgecolors = facecolors
-    figure("3. Comparison between formulations M and G", figsize = (12, 7.5))
-    title("Positive difference of number of transfers collected")    
-    xticks(1:length(x_values), x_values, rotation = 60, ha = "right")
-    tick_params(labelsize = 6, axis = "x")
+    figure("3. Comparison between formulations M and G", figsize=(12, 7.5))
+    title("Positive difference of number of transfers collected")
+    xticks(1:length(x_values), x_values, rotation=60, ha="right")
+    tick_params(labelsize=6, axis="x")
     xlabel("Name of datafiles")
     ylabel("Positive difference of number of transfers")
     yticks(0:maximum(y_values))
-    ylim(-1,5)
+    ylim(-1, 5)
     bar(x_values, y_values, color=facecolors, edgecolor=edgecolors, alpha=0.5)
-    for i=1:length(x_values)
-        text(i, y_values[i]+0.075, winner[i], ha = "center")
+    for i = 1:length(x_values)
+        text(i, y_values[i] + 0.075, winner[i], ha="center")
     end
     savefig("resultsMGdifference.png")
-    
+
 end
