@@ -17,8 +17,8 @@ println("  Load and compile the code...")
 
 using Printf             # to format the output
 using JuMP               # Algebraic modeling language to manage a MIP model
-using GLPK               # to use the GLPK MIP solver
-#using Gurobi            # to use the Gurobi MIP solver
+#using GLPK               # to use the GLPK MIP solver
+using Gurobi            # to use the Gurobi MIP solver
 using PyPlot             # to draw graphics
 using DataFrames, CSV    # to manage dataframes
 using PrettyTables       # to export table (dataframe) in latex
@@ -36,9 +36,9 @@ include("TDAP_tools.jl")
 global experiment = true     # true → perform all the instances | false → perform one instance
 global display = false     # true → output information in the terminal | false → nothing 
 global graphic = false     # true → output information graphically  | false → nothing
-IPsolver = GLPK.Optimizer     # Setup the IP solver with GLPK → GLPK.Optimizer
+#IPsolver = GLPK.Optimizer     # Setup the IP solver with GLPK → GLPK.Optimizer
 timeLimit = 600.0             # Setup the time limit (seconds) allowed to the MIP solver
-#IPsolver = Gurobi.Optimizer  # Setup the IP solver with Gurobi → Gurobi.Optimizer
+IPsolver = Gurobi.Optimizer  # Setup the IP solver with Gurobi → Gurobi.Optimizer
 
 
 # =============================================================================
@@ -138,7 +138,7 @@ for iInstance = 1:nInstances
     elseif termination_status(modM) == TIME_LIMIT
 
         display ? println("Formulation M: time limit reached") : nothing
-        all_OptSolutionM[iInstance] = Solution(timeLimit, -1, -1, -1, -1, -1, -1.0)
+        all_OptSolutionM[iInstance] = Solution(timeLimit, -1, -1, -1, -1, -1, -1, -1, -1.0)
 
     else
 
@@ -190,7 +190,7 @@ for iInstance = 1:nInstances
     elseif termination_status(modG) == TIME_LIMIT
 
         display ? println("Formulation G: time limit reached") : nothing
-        all_OptSolutionG[iInstance] = Solution(timeLimit, -1, -1, -1, -1, -1, -1.0)
+        all_OptSolutionG[iInstance] = Solution(timeLimit, -1, -1, -1, -1, -1, -1, -1, -1.0)
 
     else
 
