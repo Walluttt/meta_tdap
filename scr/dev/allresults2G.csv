@@ -1,0 +1,4 @@
+fname,tElapsed,z1TransfertTime,z2QuantityTransfered,nTruckAssigned,nTransfertDone,pTransfertDone
+data_10_3_0,5.541,29,781,9,20,64.52
+data_10_3_1,7.229,68,1030,7,28,46.67
+data_10_3_2,7.655,52,949,8,28,58.33

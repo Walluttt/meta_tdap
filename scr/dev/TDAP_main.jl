@@ -6,7 +6,7 @@
 # -----------------------------------------------------------------------------
 # TDAP: solving single objective formulations M and G
 
-println("\n  TDAP: Solving single objective formulations M and G \n")
+println("\n  TDAP: Solving formulations M, G, 2M, and 2G \n")
 
 
 # =============================================================================
@@ -423,23 +423,41 @@ if experiment
     dfM = DataFrame(Dict(n => [getfield(x, n) for x in all_OptSolutionM] for n in fieldnames(Solution)))
     dfM[!, :fname] = copy(fnames)
     deleteat!(dfM, 1)
-    CSV.write("allresultsM.csv", dfM[!, [8, 4, 5, 6, 7, 1, 2, 3]])
+    CSV.write("allresultsM.csv", dfM[!, [10, 4, 7, 8, 9, 6, 5, 2, 1, 3]])
 
     dfG = DataFrame(Dict(n => [getfield(x, n) for x in all_OptSolutionG] for n in fieldnames(Solution)))
     dfG[!, :fname] = copy(fnames)
     deleteat!(dfG, 1)
-    CSV.write("allresultsG.csv", dfG[!, [8, 4, 5, 6, 7, 1, 2, 3]])
+    CSV.write("allresultsG.csv", dfG[!, [10, 4, 7, 8, 9, 6, 5, 2, 1, 3]])
+
+    df2M = DataFrame(Dict(n => [getfield(x, n) for x in all_OptSolution2M] for n in fieldnames(Solution2R)))
+    df2M[!, :fname] = copy(fnames)
+    deleteat!(df2M, 1)
+    CSV.write("allresults2M.csv", df2M[!, [7, 4, 5, 6, 2, 1, 3]])
+
+    df2G = DataFrame(Dict(n => [getfield(x, n) for x in all_OptSolution2G] for n in fieldnames(Solution2R)))
+    df2G[!, :fname] = copy(fnames)
+    deleteat!(df2G, 1)
+    CSV.write("allresults2G.csv", df2G[!, [7, 4, 5, 6, 2, 1, 3]])
 
 
     # -------------------------------------------------------------------------
     # save the results into latex tables
 
     open("resM.tex", "w") do f
-        pretty_table(f, dfM[!, [8, 4, 5, 6, 7, 1, 2, 3]], backend=Val(:latex))
+        pretty_table(f, dfM[!, [10, 4, 7, 8, 9, 6, 5, 2, 1, 3]], backend=Val(:latex))
     end
 
     open("resG.tex", "w") do f
-        pretty_table(f, dfG[!, [8, 4, 5, 6, 7, 1, 2, 3]], backend=Val(:latex))
+        pretty_table(f, dfG[!, [10, 4, 7, 8, 9, 6, 5, 2, 1, 3]], backend=Val(:latex))
+    end
+
+    open("res2M.tex", "w") do f
+        pretty_table(f, df2M[!, [7, 4, 5, 6, 2, 1, 3]], backend=Val(:latex))
+    end
+
+    open("res2G.tex", "w") do f
+        pretty_table(f, df2G[!, [7, 4, 5, 6, 2, 1, 3]], backend=Val(:latex))
     end
 
     # -------------------------------------------------------------------------
@@ -526,4 +544,83 @@ if experiment
     end
     savefig("resultsMGdifference.png")
 
+    # comparizon M and 2M
+    x_values = (String)[]
+    y_values = (Int64)[]
+    facecolors = (String)[]
+    winner = (String)[]
+    x_file = copy(dfM[!, :fname])
+    y_M = copy(dfM[!, :totalTimeTransfert])
+    y_2M = copy(df2M[!, :z1TransfertTime])
+    for i in 1:length(y_M)
+        if y_M[i] != -1 && y_2M[i] != -1
+            push!(x_values, x_file[i])
+            if y_2M[i] > y_M[i]
+                push!(y_values, y_M[i] - y_2M[i])
+                push!(facecolors, "red")
+                push!(winner, "M")
+            elseif y_2M[i] < y_M[i]
+                push!(y_values, y_2M[i] - y_M[i])
+                push!(facecolors, "red")
+                push!(winner, "2M")
+            else
+                push!(y_values, 0)
+                push!(facecolors, "red")
+                push!(winner, "=")
+            end
+        end
+    end
+    edgecolors = facecolors
+    figure("4. Comparison between formulations M and 2M", figsize=(12, 7.5))
+    title("Positive difference of total time transfert")
+    xticks(1:length(x_values), x_values, rotation=60, ha="right")
+    tick_params(labelsize=6, axis="x")
+    xlabel("Name of datafiles")
+    ylabel("Positive difference of total time transfert")
+    yticks(minimum(y_values):0)
+    ylim(minimum(y_values)-1, 1)
+    bar(x_values, y_values, color=facecolors, edgecolor=edgecolors, alpha=0.5)
+    for i = 1:length(x_values)
+        text(i, 0 + 0.075, winner[i], ha="center")
+    end
+
+    # comparizon G and 2G
+    x_values = (String)[]
+    y_values = (Int64)[]
+    facecolors = (String)[]
+    winner = (String)[]
+    x_file = copy(dfG[!, :fname])
+    y_G = copy(dfG[!, :totalTimeTransfert])
+    y_2G = copy(df2G[!, :z1TransfertTime])
+    for i in 1:length(y_M)
+        if y_G[i] != -1 && y_2G[i] != -1
+            push!(x_values, x_file[i])
+            if y_2G[i] > y_G[i]
+                push!(y_values, y_G[i] - y_2G[i])
+                push!(facecolors, "blue")
+                push!(winner, "G")
+            elseif y_2G[i] < y_G[i]
+                push!(y_values, y_2G[i] - y_G[i])
+                push!(facecolors, "blue")
+                push!(winner, "2G")
+            else
+                push!(y_values, 0)
+                push!(facecolors, "blue")
+                push!(winner, "=")
+            end
+        end
+    end
+    edgecolors = facecolors
+    figure("4. Comparison between formulations G and 2G", figsize=(12, 7.5))
+    title("Positive difference of total time transfert")
+    xticks(1:length(x_values), x_values, rotation=60, ha="right")
+    tick_params(labelsize=6, axis="x")
+    xlabel("Name of datafiles")
+    ylabel("Positive difference of total time transfert")
+    yticks(minimum(y_values):0)
+    ylim(minimum(y_values)-1, 1)
+    bar(x_values, y_values, color=facecolors, edgecolor=edgecolors, alpha=0.5)
+    for i = 1:length(x_values)
+        text(i, 0 + 0.075, winner[i], ha="center")
+    end    
 end
