@@ -33,7 +33,7 @@ include("TDAP_graphics.jl")
 include("TDAP_tools.jl")
 
 
-global experiment = true     # true → perform all the instances | false → perform one instance
+global experiment = false     # true → perform all the instances | false → perform one instance
 global display = false     # true → output information in the terminal | false → nothing 
 global graphic = false     # true → output information graphically  | false → nothing
 #IPsolver = GLPK.Optimizer     # Setup the IP solver with GLPK → GLPK.Optimizer
@@ -52,7 +52,7 @@ if !experiment
     #fnames = ["didactic"]
 
     path = "../../data/singleObjective/singleObjectiveGelareh2016/"
-    fnames = ["data_10_3_0"]
+    fnames = ["data_18_4_0"]#["data_10_3_0"]
 
 else
     # a collection of instances
@@ -258,7 +258,7 @@ for iInstance = 1:nInstances
 
         # -----------------------------------------------------------------------------
         # Setup the model / lex(obj2→obj1)
-        zOptObj2 = objective_value(modObj2M)
+        zOptObj2 = Int(floor(objective_value(modObj2M)))
 
         modObjLex21M = formulation_2M(instance, δ, atr, dtr, IPsolver, :obj1)
         @constraint(modObjLex21M, obj2cst, sum((sum(instance.f[i, j] * modObjLex21M[:z][i, j, k, l] for k = 1:instance.m, l = 1:instance.m)) for i = 1:instance.n, j = 1:instance.n) == zOptObj2)
@@ -283,7 +283,7 @@ for iInstance = 1:nInstances
 
         else
 
-            @assert false "No optimal solution found!!!"
+            @assert false "No optimal solution found!!! (modObjLex21M)"
 
         end
 
@@ -294,7 +294,7 @@ for iInstance = 1:nInstances
 
     else
 
-        @assert false "No optimal solution found!!!"
+        @assert false "No optimal solution found!!! (modObj2M)"
 
     end
 
@@ -340,24 +340,24 @@ for iInstance = 1:nInstances
 
     # -----------------------------------------------------------------------------
     # Setup the model / obj2
-    modObj2 = formulation_2G(instance, δ, atr, dtr, IPsolver, :obj2)
-    set_silent(modObj2)
-    set_time_limit_sec(modObj2, timeLimit)
+    modObj2G = formulation_2G(instance, δ, atr, dtr, IPsolver, :obj2)
+    set_silent(modObj2G)
+    set_time_limit_sec(modObj2G, timeLimit)
 
     # -----------------------------------------------------------------------------
     # Compute the optimal solution
     start = time()
-    optimize!(modObj2)
+    optimize!(modObj2G)
     t_elapsed1 = time() - start
 
     # -----------------------------------------------------------------------------
     # Query the optimal solution
-    if termination_status(modObj2) == OPTIMAL
-        display ? displayOptimalSolution2obj("Formulation 2G/obj2", t_elapsed1, modObj2, instance) : nothing
+    if termination_status(modObj2G) == OPTIMAL
+        display ? displayOptimalSolution2obj("Formulation 2G/obj2", t_elapsed1, modObj2G, instance) : nothing
 
         # -----------------------------------------------------------------------------
         # Setup the model / lex(obj2→obj1)
-        zOptObj2 = objective_value(modObj2)
+        zOptObj2 = Int(floor(objective_value(modObj2G)))
 
         modObjLex21 = formulation_2G(instance, δ, atr, dtr, IPsolver, :obj1)
         @constraint(modObjLex21, obj2cst, sum((sum(instance.f[i, j] * modObjLex21[:z][i, j, k, l] for k = 1:instance.m, l = 1:instance.m)) for i = 1:instance.n, j = 1:instance.n) == zOptObj2)
@@ -386,7 +386,7 @@ for iInstance = 1:nInstances
 
         end
 
-    elseif termination_status(modObj2) == TIME_LIMIT
+    elseif termination_status(modObj2G) == TIME_LIMIT
 
         display ? println("Formulation 2G/obj 2: time limit reached") : nothing
         all_OptSolutionG2[iInstance] = Solution2R(timeLimit, -1, -1, -1, -1, -1.0)
