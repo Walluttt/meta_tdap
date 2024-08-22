@@ -33,11 +33,11 @@ include("TDAP_graphics.jl")
 include("TDAP_tools.jl")
 
 
-global experiment = false     # true → perform all the instances | false → perform one instance
-global display = false     # true → output information in the terminal | false → nothing 
-global graphic = false     # true → output information graphically  | false → nothing
-#IPsolver = GLPK.Optimizer     # Setup the IP solver with GLPK → GLPK.Optimizer
-timeLimit = 600.0             # Setup the time limit (seconds) allowed to the MIP solver
+global experiment = true     # true → perform all the instances | false → perform one instance
+global display = false       # true → output information in the terminal | false → nothing 
+global graphic = false       # true → output information graphically  | false → nothing
+#IPsolver = GLPK.Optimizer   # Setup the IP solver with GLPK → GLPK.Optimizer
+timeLimit = 600.0            # Setup the time limit (seconds) allowed to the MIP solver
 IPsolver = Gurobi.Optimizer  # Setup the IP solver with Gurobi → Gurobi.Optimizer
 
 
@@ -279,7 +279,7 @@ for iInstance = 1:nInstances
         elseif termination_status(modObjLex21M) == TIME_LIMIT
 
             display ? println("Formulation 2M/obj 1: time limit reached") : nothing
-            all_OptSolutionM2[iInstance] = Solution2R(timeLimit, -1, -1, -1, -1, -1.0)
+            all_OptSolution2M[iInstance] = Solution2R(timeLimit, -1, -1, -1, -1, -1.0)
 
         else
 
@@ -290,7 +290,7 @@ for iInstance = 1:nInstances
     elseif termination_status(modObj2M) == TIME_LIMIT
 
         display ? println("Formulation 2M/obj 2: time limit reached") : nothing
-        all_OptSolutionM2[iInstance] = Solution2R(timeLimit, -1, -1, -1, -1, -1.0)
+        all_OptSolution2M[iInstance] = Solution2R(timeLimit, -1, -1, -1, -1, -1.0)
 
     else
 
@@ -378,7 +378,7 @@ for iInstance = 1:nInstances
         elseif termination_status(modObjLex21) == TIME_LIMIT
 
             display ? println("Formulation 2G/obj 1: time limit reached") : nothing
-            all_OptSolutionG2[iInstance] = Solution2R(timeLimit, -1, -1, -1, -1, -1.0)
+            all_OptSolution2G[iInstance] = Solution2R(timeLimit, -1, -1, -1, -1, -1.0)
 
         else
 
@@ -389,7 +389,7 @@ for iInstance = 1:nInstances
     elseif termination_status(modObj2G) == TIME_LIMIT
 
         display ? println("Formulation 2G/obj 2: time limit reached") : nothing
-        all_OptSolutionG2[iInstance] = Solution2R(timeLimit, -1, -1, -1, -1, -1.0)
+        all_OptSolution2G[iInstance] = Solution2R(timeLimit, -1, -1, -1, -1, -1.0)
 
     else
 
@@ -544,7 +544,7 @@ if experiment
     end
     savefig("resultsMGdifference.png")
 
-    # comparizon M and 2M
+    # comparison M and 2M
     x_values = (String)[]
     y_values = (Int64)[]
     facecolors = (String)[]
@@ -584,7 +584,7 @@ if experiment
         text(i, 0 + 0.075, winner[i], ha="center")
     end
 
-    # comparizon G and 2G
+    # comparison G and 2G
     x_values = (String)[]
     y_values = (Int64)[]
     facecolors = (String)[]
@@ -623,4 +623,42 @@ if experiment
     for i = 1:length(x_values)
         text(i, 0 + 0.075, winner[i], ha="center")
     end    
+
+    # comparison if exists a dominance between 2M and M + 2G and G
+    x_values = (String)[]
+    y_values = (Int64)[]
+    x_file = copy(dfG[!, :fname])
+
+    y_Mz1 = copy(dfM[!, :totalTimeTransfert])
+    y_Mz2 = copy(dfM[!, :totalQuantityTransfered])
+
+    y_Gz1 = copy(dfG[!, :totalTimeTransfert])
+    y_Gz2 = copy(dfG[!, :totalQuantityTransfered])
+
+    y_2Mz1 = copy(df2M[!, :z1TransfertTime])
+    y_2Mz2 = copy(df2M[!, :z2QuantityTransfered])
+
+    y_2Gz1 = copy(df2G[!, :z1TransfertTime])
+    y_2Gz2 = copy(df2G[!, :z2QuantityTransfered])
+
+    global countDominance = 0
+    open("dominance.txt", "w") do f
+        for i in 1:length(x_file)
+            if y_Mz1[i] != -1 && y_2Mz1[i] != -1
+                if y_2Mz1[i] < y_Mz1[i] && y_2Mz2[i] > y_Mz2[i]
+                    println(f, x_file[i],"  dominance 2M ⟶ ($(y_2Mz1[i]) ; $(y_2Mz2[i])) M:($(y_Mz1[i]) ; $(y_Mz2[i]))" )
+                    global countDominance+=1
+                end
+            end
+
+            if y_Gz1[i] != -1 && y_2Gz1[i] != -1
+                if y_2Gz1[i] < y_Gz1[i] && y_2Gz2[i] > y_Gz2[i]
+                    println(f, x_file[i],"  dominance 2G ⟶ ($(y_2Gz1[i]) ; $(y_2Gz2[i])) G:($(y_Gz1[i]) ; $(y_Gz2[i]))" )
+                    global countDominance+=1
+                end
+            end
+        end
+        println(f, "\n Number of dominance: $countDominance")
+    end
+
 end
