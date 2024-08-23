@@ -476,6 +476,7 @@ if experiment
     grid(color="gray", linestyle=":", linewidth=0.5)
     savefig("resultsMGtime.png")
 
+    
     # Optimal value (when solved) for the aggregated objective function
     figure("1. Comparison between formulations M and G", figsize=(12, 7.5))
     title("Optimal value of objective functions collected")
@@ -489,6 +490,7 @@ if experiment
     grid(color="gray", linestyle=":", linewidth=0.5)
     savefig("resultsMGobjFct.png")
 
+
     # Optimal number of transfets between docks (when solved)
     figure("2. Comparison between formulations M and G", figsize=(12, 7.5))
     title("Number of transfers collected")
@@ -501,6 +503,7 @@ if experiment
     legend(loc=2, fontsize="small")
     grid(color="gray", linestyle=":", linewidth=0.5)
     savefig("resultsMGnbrTft.png")
+
 
     # Positive difference in number of transferts for instances solved to the optimum by the two formulations
     x_values = (String)[]
@@ -544,6 +547,7 @@ if experiment
     end
     savefig("resultsMGdifference.png")
 
+
     # comparison M and 2M
     x_values = (String)[]
     y_values = (Int64)[]
@@ -583,6 +587,8 @@ if experiment
     for i = 1:length(x_values)
         text(i, 0 + 0.075, winner[i], ha="center")
     end
+    savefig("resultsM2Mdifference.png")
+
 
     # comparison G and 2G
     x_values = (String)[]
@@ -611,7 +617,7 @@ if experiment
         end
     end
     edgecolors = facecolors
-    figure("4. Comparison between formulations G and 2G", figsize=(12, 7.5))
+    figure("5. Comparison between formulations G and 2G", figsize=(12, 7.5))
     title("Positive difference of total time transfert")
     xticks(1:length(x_values), x_values, rotation=60, ha="right")
     tick_params(labelsize=6, axis="x")
@@ -623,6 +629,8 @@ if experiment
     for i = 1:length(x_values)
         text(i, 0 + 0.075, winner[i], ha="center")
     end    
+    savefig("resultsG2Gdifference.png")
+
 
     # comparison if exists a dominance between 2M and M + 2G and G
     x_values = (String)[]

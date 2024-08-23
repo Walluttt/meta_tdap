@@ -1,2 +1,11 @@
+data_12_4_0  dominance 2G ⟶ (63 ; 980) G:(64 ; 973)
+data_16_4_4  dominance 2M ⟶ (186 ; 1175) M:(194 ; 1167)
+data_16_6_0  dominance 2G ⟶ (97 ; 1591) G:(110 ; 1590)
+data_16_6_2  dominance 2M ⟶ (310 ; 1767) M:(344 ; 1764)
+data_18_4_0  dominance 2M ⟶ (386 ; 1818) M:(392 ; 1811)
+data_18_4_4  dominance 2M ⟶ (386 ; 1980) M:(390 ; 1975)
+data_20_6_1  dominance 2G ⟶ (195 ; 2902) G:(199 ; 2896)
+data_20_6_3  dominance 2G ⟶ (141 ; 2351) G:(152 ; 2348)
+data_25_6_4  dominance 2G ⟶ (262 ; 3552) G:(271 ; 3531)
 
- Number of dominance: 0
+ Number of dominance: 9
