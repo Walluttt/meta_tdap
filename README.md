@@ -6,7 +6,7 @@
 
 ## Run the code
 - download all the repository from GitHub
-- in a terminal, move inside the subdirectory `dev` and invoke `julia`
+- in a terminal, move inside the subdirectory `src` and invoke `julia`
 - in the REPL, invoke `include("TDAP_main.jl")`
 
 ## Setup the code

@@ -17,8 +17,8 @@ println("  Load and compile the code...")
 
 using Printf             # to format the output
 using JuMP               # Algebraic modeling language to manage a MIP model
-#using GLPK               # to use the GLPK MIP solver
-using Gurobi            # to use the Gurobi MIP solver
+using GLPK               # to use the GLPK MIP solver
+#using Gurobi            # to use the Gurobi MIP solver
 using PyPlot             # to draw graphics
 using DataFrames, CSV    # to manage dataframes
 using PrettyTables       # to export table (dataframe) in latex
@@ -34,11 +34,11 @@ include("TDAP_tools.jl")
 
 
 global experiment = true     # true → perform all the instances | false → perform one instance
-global display = false       # true → output information in the terminal | false → nothing 
+global display = true       # true → output information in the terminal | false → nothing 
 global graphic = false       # true → output information graphically  | false → nothing
-#IPsolver = GLPK.Optimizer   # Setup the IP solver with GLPK → GLPK.Optimizer
+IPsolver = GLPK.Optimizer   # Setup the IP solver with GLPK → GLPK.Optimizer
+#IPsolver = Gurobi.Optimizer  # Setup the IP solver with Gurobi → Gurobi.Optimizer
 timeLimit = 600.0            # Setup the time limit (seconds) allowed to the MIP solver
-IPsolver = Gurobi.Optimizer  # Setup the IP solver with Gurobi → Gurobi.Optimizer
 
 
 # =============================================================================
@@ -48,17 +48,17 @@ IPsolver = Gurobi.Optimizer  # Setup the IP solver with Gurobi → Gurobi.Optimi
 if !experiment
     # 1 instance only
 
-    #path = "../../data/singleObjective/didactic/"
-    #fnames = ["didactic"]
+    path = "../data/singleObjective/didactic/"
+    fnames = ["didactic"]
 
-    path = "../../data/singleObjective/singleObjectiveGelareh2016/"
-    fnames = ["data_18_4_0"]#["data_10_3_0"]
+    #path = "../data/singleObjective/singleObjectiveGelareh2016/"
+    #fnames = ["data_18_4_0"]#["data_10_3_0"]
 
 else
     # a collection of instances
 
-    path = "../../data/singleObjective/singleObjectiveGelareh2016/"
-    fnames = setfname() # vector with all the filenames of instances available in folder given by path
+    path = "../data/singleObjective/singleObjectiveGelareh2016/"
+    fnames = setfnameTest() # vector with all the filenames of instances available in folder given by path
 
 end
 nInstances = length(fnames)
@@ -142,7 +142,7 @@ for iInstance = 1:nInstances
 
     else
 
-        @assert false "No optimal solution found!!!"
+        @assert false "No optimal solution found (modM)!!!"
 
     end
 
@@ -194,7 +194,7 @@ for iInstance = 1:nInstances
 
     else
 
-        @assert false "No optimal solution found!!!"
+        @assert false "No optimal solution found (modG)!!!"
 
     end
 
@@ -255,6 +255,7 @@ for iInstance = 1:nInstances
     # Query the optimal solution
     if termination_status(modObj2M) == OPTIMAL
         display ? displayOptimalSolution2obj("Formulation 2M/obj2", t_elapsed1, modObj2M, instance) : nothing
+        @assert solution_checkerValues(instance, modObj2M) "Fatal error (optimal solution no valid) !!!"
 
         # -----------------------------------------------------------------------------
         # Setup the model / lex(obj2→obj1)
@@ -274,6 +275,7 @@ for iInstance = 1:nInstances
         if termination_status(modObjLex21M) == OPTIMAL
             all_OptSolution2M[iInstance] = queryOptimalSolutionMultiObj(t_elapsed1 + t_elapsed2, modObjLex21M, instance)
             display ? displayOptimalSolution2obj("Formulation 2M lex21", t_elapsed2, modObjLex21M, instance) : nothing
+            @assert solution_checkerValues(instance, modObjLex21M) "Fatal error (optimal solution no valid) !!!"
             graphic ? drawLoadTerminal("Formulation 2M", instance, tr, atr, dtr, modObjLex21M, :yLim_Off) : nothing
 
         elseif termination_status(modObjLex21M) == TIME_LIMIT
@@ -354,35 +356,37 @@ for iInstance = 1:nInstances
     # Query the optimal solution
     if termination_status(modObj2G) == OPTIMAL
         display ? displayOptimalSolution2obj("Formulation 2G/obj2", t_elapsed1, modObj2G, instance) : nothing
+        @assert solution_checkerValues(instance, modObj2G) "Fatal error (optimal solution no valid) !!!"
 
         # -----------------------------------------------------------------------------
         # Setup the model / lex(obj2→obj1)
         zOptObj2 = Int(floor(objective_value(modObj2G)))
 
-        modObjLex21 = formulation_2G(instance, δ, atr, dtr, IPsolver, :obj1)
-        @constraint(modObjLex21, obj2cst, sum((sum(instance.f[i, j] * modObjLex21[:z][i, j, k, l] for k = 1:instance.m, l = 1:instance.m)) for i = 1:instance.n, j = 1:instance.n) == zOptObj2)
-        set_silent(modObjLex21)
-        set_time_limit_sec(modObjLex21, timeLimit)
+        modObjLex21G = formulation_2G(instance, δ, atr, dtr, IPsolver, :obj1)
+        @constraint(modObjLex21G, obj2cst, sum((sum(instance.f[i, j] * modObjLex21G[:z][i, j, k, l] for k = 1:instance.m, l = 1:instance.m)) for i = 1:instance.n, j = 1:instance.n) == zOptObj2)
+        set_silent(modObjLex21G)
+        set_time_limit_sec(modObjLex21G, timeLimit)
 
         # -----------------------------------------------------------------------------
         # Compute the optimal solution
         start = time()
-        optimize!(modObjLex21)
+        optimize!(modObjLex21G)
         t_elapsed2 = time() - start
 
-        if termination_status(modObjLex21) == OPTIMAL
-            all_OptSolution2G[iInstance] = queryOptimalSolutionMultiObj(t_elapsed1 + t_elapsed2, modObjLex21, instance)
-            display ? displayOptimalSolution2obj("Formulation 2G lex21", t_elapsed2, modObjLex21, instance) : nothing
-            graphic ? drawLoadTerminal("Formulation 2G", instance, tr, atr, dtr, modObjLex21, :yLim_Off) : nothing
+        if termination_status(modObjLex21G) == OPTIMAL
+            all_OptSolution2G[iInstance] = queryOptimalSolutionMultiObj(t_elapsed1 + t_elapsed2, modObjLex21G, instance)
+            display ? displayOptimalSolution2obj("Formulation 2G lex21", t_elapsed2, modObjLex21G, instance) : nothing
+            @assert solution_checkerValues(instance, modObjLex21G) "Fatal error (optimal solution no valid) !!!"
+            graphic ? drawLoadTerminal("Formulation 2G", instance, tr, atr, dtr, modObjLex21G, :yLim_Off) : nothing
 
-        elseif termination_status(modObjLex21) == TIME_LIMIT
+        elseif termination_status(modObjLex21G) == TIME_LIMIT
 
             display ? println("Formulation 2G/obj 1: time limit reached") : nothing
             all_OptSolution2G[iInstance] = Solution2R(timeLimit, -1, -1, -1, -1, -1.0)
 
         else
 
-            @assert false "No optimal solution found!!!"
+            @assert false "No optimal solution found (modObjLex21G)!!!"
 
         end
 
@@ -393,7 +397,7 @@ for iInstance = 1:nInstances
 
     else
 
-        @assert false "No optimal solution found!!!"
+        @assert false "No optimal solution found (modObj2G)!!!"
 
     end
 

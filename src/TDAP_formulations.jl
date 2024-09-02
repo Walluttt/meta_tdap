@@ -30,30 +30,30 @@ function formulation_M(instance::Instance, δ::Matrix{Int64}, atr::Vector{Vector
     # objective: total operational cost + total penalty cost
     @objective(mod, Min, cost + penality)
 
-    # constraint (2):          
-    @constraint(mod, exp2_[i=1:n], sum(y[i,k] for k=1:m) <= 1) 
+    # constraint (M.2):          
+    @constraint(mod, cstM2_[i=1:n], sum(y[i,k] for k=1:m) <= 1) 
 
-    # constraint (3): 
-    @constraint(mod, exp3_[i=1:n, j=1:n, k=1:m, l=1:m], z[i,j,k,l] <= y[i,k])
+    # constraint (M.3): 
+    @constraint(mod, cstM3_[i=1:n, j=1:n, k=1:m, l=1:m], z[i,j,k,l] <= y[i,k])
 
-    # constraint (4):  
-    @constraint(mod, exp4_[i=1:n, j=1:n, k=1:m, l=1:m], z[i,j,k,l] <= y[j,l])
+    # constraint (M.4):  
+    @constraint(mod, cstM4_[i=1:n, j=1:n, k=1:m, l=1:m], z[i,j,k,l] <= y[j,l])
 
-    # constraint (5): 
-    @constraint(mod, exp5_[i=1:n, j=1:n, k=1:m, l=1:m], y[i,k] + y[j,l] - 1 <= z[i,j,k,l])
+    # constraint (M.5): 
+    @constraint(mod, cstM5_[i=1:n, j=1:n, k=1:m, l=1:m], y[i,k] + y[j,l] - 1 <= z[i,j,k,l])
 
-    # constraint (6):  
-    @constraint(mod, exp6_[i=1:n, j=1:n, k=1:m; i!=j], δ[i,j] + δ[j,i] >= z[i,j,k,k])
+    # constraint (M.6):  
+    @constraint(mod, cstM6_[i=1:n, j=1:n, k=1:m; i!=j], δ[i,j] + δ[j,i] >= z[i,j,k,k])
 
-    # constraint (7):  
-    @constraint(mod, exp7_[r=1:2*n], sum(f[i,j] * z[i,j,k,l] for i in atr[r], j=1:n, k=1:m, l=1:m)
+    # constraint (M.7):  
+    @constraint(mod, cstM7_[r=1:2*n], sum(f[i,j] * z[i,j,k,l] for i in atr[r], j=1:n, k=1:m, l=1:m)
                                     - 
                                     sum(f[i,j] * z[i,j,k,l] for i=1:n, j in dtr[r], k=1:m, l=1:m)
                                     <= C
                 )
 
-    # constraint (8):  
-    @constraint(mod, exp8_[i=1:n, j=1:n, k=1:m, l=1:m], f[i,j] * z[i,j,k,l] * (d[j] - a[i] - t[k,l]) >= 0)
+    # constraint (M.8):  
+    @constraint(mod, cstM8_[i=1:n, j=1:n, k=1:m, l=1:m], f[i,j] * z[i,j,k,l] * (d[j] - a[i] - t[k,l]) >= 0)
 
     return mod
 end
@@ -85,30 +85,30 @@ function formulation_G(instance::Instance, δ::Matrix{Int64}, atr::Vector{Vector
     # objective: total operational cost + total penalty cost
     @objective(mod, Min, cost + penality)
 
-    # constraint (2):          
-    @constraint(mod, cst2_[i=1:n], sum(y[i,k] for k=1:m) <= 1) 
+    # constraint (G.2):          
+    @constraint(mod, cstG2_[i=1:n], sum(y[i,k] for k=1:m) <= 1) 
 
-    # constraint (3): 
-    @constraint(mod, cst3_[i=1:n, j=1:n, k=1:m, l=1:m], z[i,j,k,l] <= y[i,k])
+    # constraint (G.3): 
+    @constraint(mod, cstG3_[i=1:n, j=1:n, k=1:m, l=1:m], z[i,j,k,l] <= y[i,k])
 
-    # constraint (4): 
-    @constraint(mod, cst4_[i=1:n, j=1:n, k=1:m, l=1:m], z[i,j,k,l] <= y[j,l])
+    # constraint (G.4): 
+    @constraint(mod, cstG4_[i=1:n, j=1:n, k=1:m, l=1:m], z[i,j,k,l] <= y[j,l])
 
-    # constraint (5): 
-    @constraint(mod, cst5_[i=1:n, j=1:n, k=1:m; i!=j], y[i,k] + y[j,k] <= 1 + δ[i,j] + δ[j,i])
+    # constraint (G.5): 
+    @constraint(mod, cstG5_[i=1:n, j=1:n, k=1:m; i!=j], y[i,k] + y[j,k] <= 1 + δ[i,j] + δ[j,i])
 
-    # constraint (6): 
-    @constraint(mod, cst6_[i=1:n, j=1:n, k=1:m; i!=j],z[i,j,k,k] <= δ[i,j] )
+    # constraint (G.6): 
+    @constraint(mod, cstG6_[i=1:n, j=1:n, k=1:m; i!=j],z[i,j,k,k] <= δ[i,j] )
 
-    # constraint (7): 
-    @constraint(mod, cst7_[r=1:2*n], sum(f[i,j] * z[i,j,k,l] for i in atr[r], j=1:n, k=1:m, l=1:m)
+    # constraint (G.7): 
+    @constraint(mod, cstG7_[r=1:2*n], sum(f[i,j] * z[i,j,k,l] for i in atr[r], j=1:n, k=1:m, l=1:m)
                                     - 
                                     sum(f[i,j] * z[i,j,k,l] for i=1:n, j in dtr[r], k=1:m, l=1:m)
                                     <= C
                 )
 
-    # constraint (8): 
-    @constraint(mod, cst8_[i=1:n, j=1:n, k=1:m, l=1:m; i!=j && (d[j] - a[i] - t[k,l])<=0 ],  z[i,j,k,l] == 0)
+    # constraint (G.8): 
+    @constraint(mod, cstG8_[i=1:n, j=1:n, k=1:m, l=1:m; i!=j && (d[j] - a[i] - t[k,l])<=0 ],  z[i,j,k,l] == 0)
 
     return mod
 end
@@ -131,45 +131,45 @@ function formulation_2M(instance::Instance, δ::Matrix{Int64}, atr::Vector{Vecto
     # variables: 1 if truck i is assigned to dock k and truck j to dock l, 0 otherwise
     @variable(mod, z[1:n,1:n,1:m,1:m], Bin)
 
-    # expression: objFct1 → total transfert time of the pallets in the cross-dock
+    # objective (1.1): objFct1 → total transfert time of the pallets in the cross-dock
     @expression(mod, objFct1_transfertTime, sum(t[k,l] * z[i,j,k,l] for i=1:n, j=1:n, k=1:m, l=1:m))
 
-    # expression: objFct2 → total quantity transfered
-    @expression(mod, objFct2_quantityTransfered, sum(f[i,j] * z[i,j,k,l] for i=1:n, j=1:n, k=1:m, l=1:m))
+    # objective (1.2): objFct2 → total quantity transferred
+    @expression(mod, objFct2_quantitytransferred, sum(f[i,j] * z[i,j,k,l] for i=1:n, j=1:n, k=1:m, l=1:m))
 
-    # objectives:  objectives to minimize
+    # objectives: 
     if obj == :obj1
         # :obj1 => objFct1_transfertTime
         @objective(mod, Min, objFct1_transfertTime)
     else
-        # :obj2 => objFct2_quantityTransfered
-        @objective(mod, Max, objFct2_quantityTransfered)
+        # :obj2 => objFct2_quantitytransferred
+        @objective(mod, Max, objFct2_quantitytransferred)
     end
 
-    # constraint (2):          
-    @constraint(mod, exp2_[i=1:n], sum(y[i,k] for k=1:m) <= 1) 
+    # constraint (M.2):          
+    @constraint(mod, cstM2_[i=1:n], sum(y[i,k] for k=1:m) <= 1) 
 
-    # constraint (3): 
-    @constraint(mod, exp3_[i=1:n, j=1:n, k=1:m, l=1:m], z[i,j,k,l] <= y[i,k])
+    # constraint (M.3): 
+    @constraint(mod, cstM3_[i=1:n, j=1:n, k=1:m, l=1:m], z[i,j,k,l] <= y[i,k])
 
-    # constraint (4):  
-    @constraint(mod, exp4_[i=1:n, j=1:n, k=1:m, l=1:m], z[i,j,k,l] <= y[j,l])
+    # constraint (M.4):  
+    @constraint(mod, cstM4_[i=1:n, j=1:n, k=1:m, l=1:m], z[i,j,k,l] <= y[j,l])
 
-    # constraint (5): 
-    @constraint(mod, exp5_[i=1:n, j=1:n, k=1:m, l=1:m], y[i,k] + y[j,l] - 1 <= z[i,j,k,l])
+    # constraint (M.5): 
+    @constraint(mod, cstM5_[i=1:n, j=1:n, k=1:m, l=1:m], y[i,k] + y[j,l] - 1 <= z[i,j,k,l])
 
-    # constraint (6):  
-    @constraint(mod, exp6_[i=1:n, j=1:n, k=1:m; i!=j], δ[i,j] + δ[j,i] >= z[i,j,k,k])
+    # constraint (M.6):  
+    @constraint(mod, cstM6_[i=1:n, j=1:n, k=1:m; i!=j], δ[i,j] + δ[j,i] >= z[i,j,k,k])
 
-    # constraint (7):  
-    @constraint(mod, exp7_[r=1:2*n], sum(f[i,j] * z[i,j,k,l] for i in atr[r], j=1:n, k=1:m, l=1:m)
+    # constraint (M.7):  
+    @constraint(mod, cstM7_[r=1:2*n], sum(f[i,j] * z[i,j,k,l] for i in atr[r], j=1:n, k=1:m, l=1:m)
                                     - 
                                     sum(f[i,j] * z[i,j,k,l] for i=1:n, j in dtr[r], k=1:m, l=1:m)
                                     <= C
                 )
 
-    # constraint (8):  
-    @constraint(mod, exp8_[i=1:n, j=1:n, k=1:m, l=1:m], f[i,j] * z[i,j,k,l] * (d[j] - a[i] - t[k,l]) >= 0)
+    # constraint (M.8):  
+    @constraint(mod, cstM8_[i=1:n, j=1:n, k=1:m, l=1:m], f[i,j] * z[i,j,k,l] * (d[j] - a[i] - t[k,l]) >= 0)
 
     return mod
 end
@@ -192,45 +192,45 @@ function formulation_2G(instance::Instance, δ::Matrix{Int64}, atr::Vector{Vecto
     # variables: 1 if truck i is assigned to dock k and truck j to dock l, 0 otherwise
     @variable(mod, z[1:n,1:n,1:m,1:m], Bin)
 
-    # expression: objFct1 → total transfert time of the pallets in the cross-dock
+    # objective (1.1): objFct1 → total transfert time of the pallets in the cross-dock
     @expression(mod, objFct1_transfertTime, sum(t[k,l] * z[i,j,k,l] for i=1:n, j=1:n, k=1:m, l=1:m))
 
-    # expression: objFct2 → total quantity transfered
-    @expression(mod, objFct2_quantityTransfered, sum(f[i,j] * z[i,j,k,l] for i=1:n, j=1:n, k=1:m, l=1:m))
+    # objective (1.2): objFct2 → total quantity transferred
+    @expression(mod, objFct2_quantitytransferred, sum(f[i,j] * z[i,j,k,l] for i=1:n, j=1:n, k=1:m, l=1:m))
 
-    # objectives:  objectives to minimize
+    # objectives:
     if obj == :obj1
         # :obj1 => objFct1_transfertTime
         @objective(mod, Min, objFct1_transfertTime)
     else
-        # :obj2 => objFct2_quantityTransfered
-        @objective(mod, Max, objFct2_quantityTransfered)
+        # :obj2 => objFct2_quantitytransferred
+        @objective(mod, Max, objFct2_quantitytransferred)
     end
 
-    # constraint (2):          
-    @constraint(mod, cst2_[i=1:n], sum(y[i,k] for k=1:m) <= 1) 
+    # constraint (G.2):          
+    @constraint(mod, cstG2_[i=1:n], sum(y[i,k] for k=1:m) <= 1) 
 
-    # constraint (3): 
-    @constraint(mod, cst3_[i=1:n, j=1:n, k=1:m, l=1:m], z[i,j,k,l] <= y[i,k])
+    # constraint (G.3): 
+    @constraint(mod, cstG3_[i=1:n, j=1:n, k=1:m, l=1:m], z[i,j,k,l] <= y[i,k])
 
-    # constraint (4): 
-    @constraint(mod, cst4_[i=1:n, j=1:n, k=1:m, l=1:m], z[i,j,k,l] <= y[j,l])
+    # constraint (G.4): 
+    @constraint(mod, cstG4_[i=1:n, j=1:n, k=1:m, l=1:m], z[i,j,k,l] <= y[j,l])
 
-    # constraint (5): 
-    @constraint(mod, cst5_[i=1:n, j=1:n, k=1:m; i!=j], y[i,k] + y[j,k] <= 1 + δ[i,j] + δ[j,i])
+    # constraint (G.5): 
+    @constraint(mod, cstG5_[i=1:n, j=1:n, k=1:m; i!=j], y[i,k] + y[j,k] <= 1 + δ[i,j] + δ[j,i])
 
-    # constraint (6): 
-    @constraint(mod, cst6_[i=1:n, j=1:n, k=1:m; i!=j],z[i,j,k,k] <= δ[i,j] )
+    # constraint (G.6): 
+    @constraint(mod, cstG6_[i=1:n, j=1:n, k=1:m; i!=j],z[i,j,k,k] <= δ[i,j] )
 
-    # constraint (7): 
-    @constraint(mod, cst7_[r=1:2*n], sum(f[i,j] * z[i,j,k,l] for i in atr[r], j=1:n, k=1:m, l=1:m)
+    # constraint (G.7): 
+    @constraint(mod, cstG7_[r=1:2*n], sum(f[i,j] * z[i,j,k,l] for i in atr[r], j=1:n, k=1:m, l=1:m)
                                     - 
                                     sum(f[i,j] * z[i,j,k,l] for i=1:n, j in dtr[r], k=1:m, l=1:m)
                                     <= C
                 )
 
-    # constraint (8): 
-    @constraint(mod, cst8_[i=1:n, j=1:n, k=1:m, l=1:m; i!=j && (d[j] - a[i] - t[k,l])<=0 ],  z[i,j,k,l] == 0)
+    # constraint (G.8): 
+    @constraint(mod, cstG8_[i=1:n, j=1:n, k=1:m, l=1:m; i!=j && (d[j] - a[i] - t[k,l])<=0 ],  z[i,j,k,l] == 0)
 
     return mod
 end
