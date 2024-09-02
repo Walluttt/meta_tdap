@@ -33,12 +33,12 @@ include("TDAP_graphics.jl")
 include("TDAP_tools.jl")
 
 
-global experiment = true     # true → perform all the instances | false → perform one instance
-global display = true       # true → output information in the terminal | false → nothing 
-global graphic = false       # true → output information graphically  | false → nothing
-IPsolver = GLPK.Optimizer   # Setup the IP solver with GLPK → GLPK.Optimizer
+global experiment = false     # true → perform all the instances | false → perform one instance
+global display = false        # true → output information in the terminal | false → nothing 
+global graphic = false        # true → output information graphically  | false → nothing
+IPsolver = GLPK.Optimizer     # Setup the IP solver with GLPK → GLPK.Optimizer
 #IPsolver = Gurobi.Optimizer  # Setup the IP solver with Gurobi → Gurobi.Optimizer
-timeLimit = 600.0            # Setup the time limit (seconds) allowed to the MIP solver
+timeLimit = 600.0             # Setup the time limit (seconds) allowed to the MIP solver
 
 
 # =============================================================================
@@ -58,7 +58,7 @@ else
     # a collection of instances
 
     path = "../data/singleObjective/singleObjectiveGelareh2016/"
-    fnames = setfnameTest() # vector with all the filenames of instances available in folder given by path
+    fnames = setfname() # vector with all the filenames of instances available in folder given by path
 
 end
 nInstances = length(fnames)
