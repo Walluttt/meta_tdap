@@ -3,12 +3,11 @@
 ## Paper
 Available on [optimization-online.org](https://optimization-online.org/2024/09/analysis-and-discussion-of-single-and-multi-objective-ip-formulations-for-the-truck-to-dock-door-assignment-problem/)
 
-Citation:
-Nicolas Forget, Elizabeth Gandibleux, Xavier Gandibleux, Valentin Guy–Deroubaix, Awen Jacq–Bodet: 
+Citations:
+- Nicolas Forget, Elizabeth Gandibleux, Xavier Gandibleux, Valentin Guy–Deroubaix, Awen Jacq–Bodet: 
 Analysis and discussion of single and multi-objective IP formulations for the Truck-to-dock Door Assignment Problem. 
-optimization-online.org. September 2024. (Submitted to EJOR).
-
-Elizabeth Gandibleux, Valentin Guy–Deroubaix, Awen Jacq–Bodet: 
+optimization-online.org. September 2024. (Paper submitted to *European Journal of Operational Research*).
+- Elizabeth Gandibleux, Valentin Guy–Deroubaix, Awen Jacq–Bodet: 
 Truck-to-dock Door Assignment Problem at a Cross-Dock in Supply-Chain management.
 Computing Project. Université Libre de Bruxelles (Belgium). May 2024.
 
