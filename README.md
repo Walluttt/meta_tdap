@@ -6,7 +6,7 @@ Available on [optimization-online.org](https://optimization-online.org/2024/09/a
 Citations:
 - Nicolas Forget, Elizabeth Gandibleux, Xavier Gandibleux, Valentin Guy–Deroubaix, Awen Jacq–Bodet: 
 **Analysis and discussion of single and multi-objective IP formulations for the Truck-to-dock Door Assignment Problem.**  
-optimization-online.org. September 2024. (Paper submitted to *European Journal of Operational Research*).
+optimization-online.org. September 2024. (Paper submitted).
 - Elizabeth Gandibleux, Valentin Guy–Deroubaix, Awen Jacq–Bodet: 
 **Truck-to-dock Door Assignment Problem at a Cross-Dock in Supply-Chain management.** 
 Computing Project. Université Libre de Bruxelles (Belgium). May 2024.
