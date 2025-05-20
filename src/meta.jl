@@ -28,11 +28,15 @@ function main()
     instance = load_and_show_instance(path, instance_name)
 
     # Générer une solution initiale (assignation nulle)
-    solution = SolutionModule.init_solution(instance)
-    solution = SolutionModule.local_search(instance, solution, 1)
+    time = @elapsed begin
+        solution = SolutionModule.init_solution(instance)
+        solution = SolutionModule.local_search(instance, solution, 3)
+    end
     println("\nSolution générée:")
     println("Affectation: ", solution.assignment)
     println("Coût total: ", solution.cost)
+    println("\nTemps d'exécution : $(round(time, digits=3)) ms")
+
 end
 
 # Lancer le programme

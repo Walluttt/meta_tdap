@@ -7,6 +7,9 @@
 # data structure storing information describing a single objective instance
 module Datastructures
 
+export Instance, Solution, Solution2R
+
+
 # Définition de la structure Instance
 mutable struct Instance
     fname::String

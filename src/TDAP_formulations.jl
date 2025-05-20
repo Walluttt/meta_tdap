@@ -10,7 +10,7 @@
 function formulation_M(instance::Instance, δ::Matrix{Int64}, atr::Vector{Vector{Int64}}, dtr::Vector{Vector{Int64}}, IPsolver::DataType)
 
     # Splitting the values stored in instances in separated variables (Destructuring Assignment)
-    (; name, n,m, a,d, t,f,c,p, C) = instance
+    (; fname, n,m, a,d, t,f,c,p, C) = instance
 
     # create a model
     mod = Model(IPsolver)
@@ -65,7 +65,7 @@ end
 function formulation_G(instance::Instance, δ::Matrix{Int64}, atr::Vector{Vector{Int64}}, dtr::Vector{Vector{Int64}}, IPsolver::DataType)
 
     # Splitting the values stored in instances in separated variables (Destructuring Assignment)
-    (; name, n,m, a,d, t,f,c,p, C) = instance
+    (; fname, n,m, a,d, t,f,c,p, C) = instance
 
     # create a model
     mod = Model(IPsolver)
@@ -120,7 +120,7 @@ end
 function formulation_2M(instance::Instance, δ::Matrix{Int64}, atr::Vector{Vector{Int64}}, dtr::Vector{Vector{Int64}}, IPsolver::DataType, obj::Symbol)
 
     # Splitting the values stored in instances in separated variables (Destructuring Assignment)
-    (; name, n,m, a,d, t,f,c,p, C) = instance
+    (; fname, n,m, a,d, t,f,c,p, C) = instance
 
     # create a model
     mod = Model(IPsolver)
@@ -181,7 +181,7 @@ end
 function formulation_2G(instance::Instance, δ::Matrix{Int64}, atr::Vector{Vector{Int64}}, dtr::Vector{Vector{Int64}}, IPsolver::DataType, obj::Symbol)
 
     # Splitting the values stored in instances in separated variables (Destructuring Assignment)
-    (; name, n,m, a,d, t,f,c,p, C) = instance
+    (; fname, n,m, a,d, t,f,c,p, C) = instance
 
     # create a model
     mod = Model(IPsolver) 

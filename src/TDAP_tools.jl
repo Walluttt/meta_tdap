@@ -9,7 +9,7 @@
 function solution_checkerM(instance::Instance, δ::Matrix{Int64}, tr::Vector{Int64}, mod::Model)
 
     # Splitting the values stored in instances in separated variables (Destructuring Assignment)
-    (; name, n,m, a,d, t,f,c,p, C) = instance
+    (; fname, n,m, a,d, t,f,c,p, C) = instance
 
     # extracting the optimal values for variables y and z
     y = copy(value.(mod[:y]))
@@ -136,7 +136,7 @@ function queryOptimalSolutionMonoObj(t_elapsed::Float64, mod::Model, instance::I
 
     # -------------------------------------------------------------------------    
     # Splitting the values stored in instances in separated variables (Destructuring Assignment)
-    (; name, n,m, a,d, t,f,c,p, C) = instance
+    (; fname, n,m, a,d, t,f,c,p, C) = instance
 
     # -------------------------------------------------------------------------
     sol_tElapsed = trunc(t_elapsed, digits=3)
@@ -227,7 +227,7 @@ function queryOptimalSolutionMultiObj(t_elapsed::Float64, mod::Model, instance::
 
     # -------------------------------------------------------------------------    
     # Splitting the values stored in instances in separated variables (Destructuring Assignment)
-    (; name, n,m, a,d, t,f,c,p, C) = instance
+    (; fname, n,m, a,d, t,f,c,p, C) = instance
 
     # -------------------------------------------------------------------------
     sol_tElapsed = trunc(t_elapsed, digits=3)
