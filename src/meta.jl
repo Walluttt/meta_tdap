@@ -30,7 +30,7 @@ function main()
     # Générer une solution initiale (assignation nulle)
     time = @elapsed begin
         solution = SolutionModule.init_solution(instance)
-        solution = SolutionModule.local_search(instance, solution, 3)
+        #solution = SolutionModule.local_search(instance, solution, 1)
     end
     println("\nSolution générée:")
     println("Affectation: ", solution.assignment)

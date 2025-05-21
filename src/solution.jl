@@ -15,14 +15,12 @@ function init_solution(instance)
     for truck in 1:instance.n
         assignment[truck] = 0
     end
-    cap = 0
     # Obtenir les indices des camions triés par heure d’arrivée
     sorted_trucks = sortperm(instance.a)  # retourne les indices triés
 
     #Assignation des premiers camions par ordre d'heure d'arrivée, aux premiers docks
     for (dock, truck) in enumerate(sorted_trucks[1:instance.m])
         assignment[truck] = dock
-        cap += instance.f[truck]
     end
 
     #Assignation des autres camions par ordre d'heure d'arrivée, au premier dock pouvant les accepter
@@ -42,7 +40,7 @@ function calculate_cost(instance, assignment)
         if assignment[i] != 0 && assignment[j] != 0
             k = assignment[i]
             l = assignment[j]
-            if k > 0 && l > 0
+            if(instance.d[j] >= instance.a[i] && instance.f[i, j] > 0)
                 total_cost += instance.c[k, l] * instance.t[k, l]
             end
         end
@@ -50,8 +48,10 @@ function calculate_cost(instance, assignment)
 
     # Coût de pénalité si un camion n’est pas bien assigné
     for i in 1:instance.n, j in 1:instance.n
-        if assignment[i] == 0 || assignment[j] == 0
-            total_cost += instance.p[i, j] * instance.f[i, j]
+        if instance.f[i, j] > 0
+            if !(assignment[i] != 0 && assignment[j] != 0)
+                total_cost += instance.p[i, j] * instance.f[i, j]
+            end
         end
     end
 
@@ -234,14 +234,14 @@ end
 
 
 function emptyDock(instance, assignment, i) #Shaking move
-new_assignment = deepcopy(assignment)
-assigned_trucks_at_i = [t for (t, dock) in pairs(assignment) if dock == i]
+    new_assignment = deepcopy(assignment)
+    assigned_trucks_at_i = [t for (t, dock) in pairs(assignment) if dock == i]
 
-for t in assigned_trucks_at_i
-    new_assignment[t]=0
-end
+    for t in assigned_trucks_at_i
+        new_assignment[t]=0
+    end
 
-return new_assignment
+    return new_assignment
 end
 
 
