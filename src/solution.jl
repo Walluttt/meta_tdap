@@ -5,11 +5,12 @@ export Sol, init_solution, calculate_cost, local_search, isValidAssignment
 mutable struct Sol
 assignment::Dict{Int, Int}  # truck => dock
 cost::Float64
+capacity::Int
 end
 
 function init_solution(instance)
     assignment = Dict{Int, Int}()
-
+    cap=0
     # Tous les autres camions restent non assignés (valeur 0)
     for truck in 1:instance.n
         assignment[truck] = 0
@@ -30,7 +31,7 @@ function init_solution(instance)
             cost = calculate_cost(instance, assignment)
     end
     cost = calculate_cost(instance, assignment)
-    return Sol(assignment, cost)
+    return Sol(assignment, cost, 0)
 end
 
 function calculate_cost(instance, assignment)
@@ -65,7 +66,7 @@ function local_search(instance, solution, op)
                 # Générer un voisin via DEM
                 new_assignment = dem(instance, solution.assignment, i, j)
                 new_cost = calculate_cost(instance, new_assignment)
-                new_solution = Sol(new_assignment, new_cost)
+                new_solution = Sol(new_assignment, new_cost, 0)
 
                 # Vérifie si le voisin est meilleur
                 if new_solution.cost < best_solution.cost
@@ -81,7 +82,7 @@ function local_search(instance, solution, op)
                 if(instance.a[t1]>instance.d[t2] || instance.a[t2]>instance.d[t1])
                     new_assignment = tem(instance, solution.assignment, t1, t2)
                     new_cost = calculate_cost(instance, new_assignment)
-                    new_solution = Sol(new_assignment, new_cost)
+                    new_solution = Sol(new_assignment, new_cost, 0)
 
                     # Vérifie si le voisin est meilleur
                     if new_solution.cost < best_solution.cost
@@ -97,7 +98,7 @@ function local_search(instance, solution, op)
             for i in 1:instance.m
                 new_assignment = tim(instance, solution.assignment, t, i)
                 new_cost = calculate_cost(instance, new_assignment)
-                new_solution = Sol(new_assignment, new_cost)
+                new_solution = Sol(new_assignment, new_cost, 0)
 
                 # Vérifie si le voisin est meilleur
                 if new_solution.cost < best_solution.cost
@@ -111,7 +112,7 @@ function local_search(instance, solution, op)
         for t in 1:instance.n
             new_assignment = tiafdm(instance, solution.assignment, t)
             new_cost = calculate_cost(instance, new_assignment)
-            new_solution = Sol(new_assignment, new_cost)
+            new_solution = Sol(new_assignment, new_cost, 0)
 
             # Vérifie si le voisin est meilleur
             if new_solution.cost < best_solution.cost
@@ -193,6 +194,44 @@ function isValidAssignment(instance, assignment, truck, i)
 
     return true  # Aucun conflit détecté
 end
+
+
+function addTruck(instance, solution, truck, dock)
+# On copie temporairement l'affectation
+    temp_assignment = deepcopy(solution.assignment)
+    temp_assignment[truck] = dock
+
+    a = instance.a[truck]
+    d = instance.d[truck]
+    added_volume = 0
+    removed_volume = 0
+
+    for i in 1:instance.n
+        if temp_assignment[i] != 0
+            # Ajouts
+            if instance.a[i] <= d
+                for j in 1:instance.n
+                    if temp_assignment[j] != 0 && instance.f[i, j] > 0
+                        added_volume += instance.f[i, j]
+                    end
+                end
+            end
+            # Sorties
+            if instance.d[i] <= a
+                for j in 1:instance.n
+                    if temp_assignment[j] != 0 && instance.f[j, i] > 0
+                        removed_volume += instance.f[j, i]
+                    end
+                end
+            end
+        end
+    end
+
+    # Capacité potentielle après ajout
+    current_load = instance.capacity + added_volume - removed_volume
+    return current_load
+end
+
 
 function emptyDock(instance, assignment, i) #Shaking move
 new_assignment = deepcopy(assignment)
