@@ -15,26 +15,44 @@ function load_and_show_instance(path::String, instance_name::String)
     println("Capacité des quais: ", instance.C)
     println("Coût de transport (c): \n", instance.c)
     println("Temps opérationnel (t): \n", instance.t)
-
+    #println("\nValeurs de f[i, j] :")
+    # for i in 1:instance.n
+    #     for j in 1:instance.n
+    #         println("f[$i, $j] = ", instance.f[i, j])
+    #     end
+    #end
     return instance  # Pour réutilisation
 end
 
 # Fonction principale
 function main()
-    path = "../data/singleObjective/singleObjectiveGelareh2016/"
-    instance_name = "data_10_3_0"
+    path = "../data/singleObjective/didactic/"
+    instance_name = "didactic"
+    
+    # path = "../data/singleObjective/singleObjectiveGelareh2016/"
+    # instance_name = "data_10_3_0"
     
     # Charger et afficher l’instance
     instance = load_and_show_instance(path, instance_name)
-
-    # Générer une solution initiale (assignation nulle)
+    solution = nothing
     time = @elapsed begin
         solution = SolutionModule.init_solution(instance)
-        #solution = SolutionModule.local_search(instance, solution, 1)
+        solution = SolutionModule.local_search(instance, solution, 3)
     end
+
     println("\nSolution générée:")
-    println("Affectation: ", solution.assignment)
-    println("Coût total: ", solution.cost)
+    println("\nHeure d'arrivée et de sortie de chaque camion (par ordre d'arrivée) :")
+    for truck in sort(collect(keys(solution.assignment)), by = t -> instance.a[t])
+        println("Camion $truck : arrivée = $(instance.a[truck]), sortie = $(instance.d[truck])")
+    end
+    println("Affectation :")
+    for truck in sort(collect(keys(solution.assignment)), by = t -> instance.a[t])
+        print("$truck => ", solution.assignment[truck], " ")
+    end
+    println("\nCoût total: ", solution.cost)
+    for (t, cap) in sort(collect(solution.capacity))
+        println("t = $t : capacité = $cap")
+    end
     println("\nTemps d'exécution : $(round(time, digits=3)) ms")
 
 end
