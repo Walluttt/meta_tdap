@@ -26,18 +26,23 @@ end
 
 # Fonction principale
 function main()
-    path = "../data/singleObjective/didactic/"
-    instance_name = "didactic"
+    # path = "../data/singleObjective/didactic/"
+    # instance_name = "didactic"
     
-    # path = "../data/singleObjective/singleObjectiveGelareh2016/"
-    # instance_name = "data_10_3_0"
+    path = "../data/singleObjective/singleObjectiveGelareh2016/"
+    instance_name = "data_14_6_0"
     
     # Charger et afficher l’instance
     instance = load_and_show_instance(path, instance_name)
     solution = nothing
     time = @elapsed begin
         solution = SolutionModule.init_solution(instance)
-        solution = SolutionModule.local_search(instance, solution, 3)
+        println("assignement original : ", solution.assignment)
+        println("cost original : ", solution.cost)
+        #solution = SolutionModule.local_search(instance, solution, 1)
+        #solution = SolutionModule.bvnd(instance, solution)
+        #solution = SolutionModule.bvns(instance, solution, 50)
+        solution = SolutionModule.gvns(instance, solution, 20, 1)
     end
 
     println("\nSolution générée:")

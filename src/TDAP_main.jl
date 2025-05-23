@@ -48,11 +48,11 @@ timeLimit = 600.0             # Setup the time limit (seconds) allowed to the MI
 if !experiment
     # 1 instance only
 
-    path = "../data/singleObjective/didactic/"
-    fnames = ["didactic"]
+    # path = "../data/singleObjective/didactic/"
+    # fnames = ["didactic"]
 
-    #path = "../data/singleObjective/singleObjectiveGelareh2016/"
-    #fnames = ["data_18_4_0"]#["data_10_3_0"]
+    path = "../data/singleObjective/singleObjectiveGelareh2016/"
+    fnames = ["data_14_6_0"]#["data_10_3_0"]
 
 else
     # a collection of instances
