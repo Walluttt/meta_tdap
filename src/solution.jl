@@ -71,17 +71,19 @@ function calculate_cost(instance, assignment)
 end
 function local_search(instance, solution, op)
     best_solution = deepcopy(solution)
-    if op == 1  # Dock Exchange Move (DEM)
-        for i in 1:instance.m-1
-            for j in i+1:instance.m
-            # Générer un voisin via DEM
-            new_assignment = dem(solution, i, j)
-                new_cost = calculate_cost(instance, new_assignment)
-                new_solution = Sol(new_assignment, new_cost, solution.capacity)
-                # Vérifie si le voisin est meilleur
-                if new_solution.cost < best_solution.cost
-                    best_solution = new_solution
-                    return best_solution
+    if op == 1 # (TIM)
+        for t in 1:instance.n 
+            for i in 1:instance.m
+                new_assignment, new_capacity = tim(instance, solution, t, i)
+                if(is_capacity_respected(new_capacity, instance.C) && time_constraint(instance, new_assignment))
+                    new_cost = calculate_cost(instance, new_assignment)
+                    new_solution = Sol(new_assignment, new_cost, new_capacity)
+
+                    # Vérifie si le voisin est meilleur
+                    if new_solution.cost < best_solution.cost
+                        best_solution = new_solution
+                        return best_solution
+                    end
                 end
             end
         end
@@ -105,19 +107,17 @@ function local_search(instance, solution, op)
             end
         end
     end
-    if op == 3 # (TIM)
-        for t in 1:instance.n 
-            for i in 1:instance.m
-                new_assignment, new_capacity = tim(instance, solution, t, i)
-                if(is_capacity_respected(new_capacity, instance.C) && time_constraint(instance, new_assignment))
-                    new_cost = calculate_cost(instance, new_assignment)
-                    new_solution = Sol(new_assignment, new_cost, new_capacity)
-
-                    # Vérifie si le voisin est meilleur
-                    if new_solution.cost < best_solution.cost
-                        best_solution = new_solution
-                        return best_solution
-                    end
+    if op == 3  # Dock Exchange Move (DEM)
+        for i in 1:instance.m-1
+            for j in i+1:instance.m
+            # Générer un voisin via DEM
+            new_assignment = dem(solution, i, j)
+                new_cost = calculate_cost(instance, new_assignment)
+                new_solution = Sol(new_assignment, new_cost, solution.capacity)
+                # Vérifie si le voisin est meilleur
+                if new_solution.cost < best_solution.cost
+                    best_solution = new_solution
+                    return best_solution
                 end
             end
         end
@@ -355,21 +355,23 @@ function bvns(instance, initial_solution, nmax)
         while k <= k_max
             # --- Shaking step dépendant de k ---
             S_shaken = deepcopy(S)
-            if k == 2
-                # DEM : échange aléatoire de deux quais
-                i, j = rand(1:instance.m, 2)
-                S_shaken.assignment = dem(S, i, j)
-            elseif k == 3
-                # TEM : échange aléatoire de deux camions
-                t1, t2 = rand(1:instance.n, 2)
-                S_shaken.assignment = tem(instance, S.assignment, t1, t2, S.capacity)
-            elseif k == 1
+           
+            if k == 1
                 # TIM : réaffectation aléatoire d'un camion à un quai
                 t = rand(1:instance.n)
                 dock = rand(1:instance.m)
                 shaken_assignment, shaken_capacity = tim(instance, S, t, dock)
                 S_shaken.assignment = shaken_assignment
                 S_shaken.capacity = shaken_capacity
+            elseif k == 2
+                # DEM : échange aléatoire de deux quais
+                i, j = rand(1:instance.m, 2)
+                S_shaken.assignment = dem(S, i, j)
+            
+            elseif k == 3
+                # TEM : échange aléatoire de deux camions
+                t1, t2 = rand(1:instance.n, 2)
+                S_shaken.assignment = tem(instance, S.assignment, t1, t2, S.capacity)
             # elseif k == 4
             #     # TIAFDM : affectation aléatoire d'un camion
             #     t = rand(1:instance.n)
@@ -428,22 +430,22 @@ function generate_shaken(instance, S, k; max_attempts=10)
     while attempt < max_attempts && !valid
         S_shaken = deepcopy(S)
         if k == 1
-            # DEM : échange aléatoire de deux quais
-            i, j = rand(1:instance.m, 2)
-            S_shaken.assignment = dem(S, i, j)
-            # Pour DEM, nous gardons la capacité initiale
-        elseif k == 2
-            # TEM : échange aléatoire de deux camions
-            t1, t2 = rand(1:instance.n, 2)
-            S_shaken.assignment = tem(instance, S.assignment, t1, t2, S.capacity)
-            # Pour TEM, la capacité reste inchangée par rapport à S.capacity
-        elseif k == 3
             # TIM : réaffectation aléatoire d'un camion à un quai
             t = rand(1:instance.n)
             dock = rand(1:instance.m)
             shaken_assignment, shaken_capacity = tim(instance, S, t, dock)
             S_shaken.assignment = shaken_assignment
             S_shaken.capacity = shaken_capacity
+        elseif k == 2
+            # TEM : échange aléatoire de deux camions
+            t1, t2 = rand(1:instance.n, 2)
+            S_shaken.assignment = tem(instance, S.assignment, t1, t2, S.capacity)
+            # Pour TEM, la capacité reste inchangée par rapport à S.capacity
+        elseif k == 3
+            # DEM : échange aléatoire de deux quais
+            i, j = rand(1:instance.m, 2)
+            S_shaken.assignment = dem(S, i, j)
+            # Pour DEM, nous gardons la capacité initiale
         elseif k == 4
             # TIAFDM : affectation aléatoire d'un camion
             t = rand(1:instance.n)
