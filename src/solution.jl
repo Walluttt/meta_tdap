@@ -331,8 +331,7 @@ function bvnd(instance, initial_solution)
         while lambda <= lambda_max
             # Générer un voisin avec l'opérateur lambda
             S_prime = local_search(instance, S, lambda)
-            # Choix de la stratégie : First Improvement (FI) ou Best Improvement (BI)
-            # FI : on prend le premier voisin améliorant (déjà fait dans local_search)
+            #On prend le premier voisin améliorant (déjà fait dans local_search)
             if S_prime.cost < S.cost
                 S = S_prime
                 improved = true
@@ -353,30 +352,9 @@ function bvns(instance, initial_solution, nmax)
     while nbIterationsWithoutImprovement < nmax
         k = 1
         while k <= k_max
-            # --- Shaking step dépendant de k ---
-            S_shaken = deepcopy(S)
-           
-            if k == 1
-                # TIM : réaffectation aléatoire d'un camion à un quai
-                t = rand(1:instance.n)
-                dock = rand(1:instance.m)
-                shaken_assignment, shaken_capacity = tim(instance, S, t, dock)
-                S_shaken.assignment = shaken_assignment
-                S_shaken.capacity = shaken_capacity
-            elseif k == 2
-                # DEM : échange aléatoire de deux quais
-                i, j = rand(1:instance.m, 2)
-                S_shaken.assignment = dem(S, i, j)
+            # --- Shaking step avec acceptation conditionnelle ---
+            S_shaken = generate_shaken(instance, S, k)
             
-            elseif k == 3
-                # TEM : échange aléatoire de deux camions
-                t1, t2 = rand(1:instance.n, 2)
-                S_shaken.assignment = tem(instance, S.assignment, t1, t2, S.capacity)
-            # elseif k == 4
-            #     # TIAFDM : affectation aléatoire d'un camion
-            #     t = rand(1:instance.n)
-            #     S_shaken.assignment = tiafdm(instance, S.assignment, t, S.capacity)
-            end
             # Recalculer le coût après shaking
             S_shaken.cost = calculate_cost(instance, S_shaken.assignment)
 
