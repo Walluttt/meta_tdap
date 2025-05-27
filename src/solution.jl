@@ -346,7 +346,7 @@ function bvnd(instance, initial_solution)
 end
 
 function bvns(instance, initial_solution, nmax)
-    k_max = 4  # nombre d'opérateurs de voisinage
+    k_max = 3  # nombre d'opérateurs de voisinage
     S = deepcopy(initial_solution)
     nbIterationsWithoutImprovement = 0
 
@@ -355,25 +355,25 @@ function bvns(instance, initial_solution, nmax)
         while k <= k_max
             # --- Shaking step dépendant de k ---
             S_shaken = deepcopy(S)
-            if k == 1
+            if k == 2
                 # DEM : échange aléatoire de deux quais
                 i, j = rand(1:instance.m, 2)
                 S_shaken.assignment = dem(S, i, j)
-            elseif k == 2
+            elseif k == 3
                 # TEM : échange aléatoire de deux camions
                 t1, t2 = rand(1:instance.n, 2)
                 S_shaken.assignment = tem(instance, S.assignment, t1, t2, S.capacity)
-            elseif k == 3
+            elseif k == 1
                 # TIM : réaffectation aléatoire d'un camion à un quai
                 t = rand(1:instance.n)
                 dock = rand(1:instance.m)
                 shaken_assignment, shaken_capacity = tim(instance, S, t, dock)
                 S_shaken.assignment = shaken_assignment
                 S_shaken.capacity = shaken_capacity
-            elseif k == 4
-                # TIAFDM : affectation aléatoire d'un camion
-                t = rand(1:instance.n)
-                S_shaken.assignment = tiafdm(instance, S.assignment, t, S.capacity)
+            # elseif k == 4
+            #     # TIAFDM : affectation aléatoire d'un camion
+            #     t = rand(1:instance.n)
+            #     S_shaken.assignment = tiafdm(instance, S.assignment, t, S.capacity)
             end
             # Recalculer le coût après shaking
             S_shaken.cost = calculate_cost(instance, S_shaken.assignment)

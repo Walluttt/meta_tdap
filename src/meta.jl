@@ -30,7 +30,7 @@ function main()
     # instance_name = "didactic"
     
     path = "../data/singleObjective/singleObjectiveGelareh2016/"
-    instance_name = "data_14_6_0"
+    instance_name = "data_20_6_0"
     
     # Charger et afficher l’instance
     instance = load_and_show_instance(path, instance_name)
@@ -42,7 +42,7 @@ function main()
         #solution = SolutionModule.local_search(instance, solution, 1)
         #solution = SolutionModule.bvnd(instance, solution)
         #solution = SolutionModule.bvns(instance, solution, 50)
-        solution = SolutionModule.gvns(instance, solution, 20, 1)
+        solution = SolutionModule.gvns(instance, solution, 20, 2)
     end
 
     println("\nSolution générée:")
