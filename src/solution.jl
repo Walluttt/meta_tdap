@@ -286,26 +286,26 @@ end
 function uvnd(instance, solution)
 
     best_solution = local_search(instance, solution, 1)
-    println("voisinage 1 cost : ", best_solution.cost)
-    tmp = local_search(instance, solution, 2)
-    println("voisinage 2 cost : ", tmp.cost)
-    if tmp.cost < best_solution.cost
-        best_solution = tmp
-    end
-    tmp = local_search(instance, solution, 3)
-    println("voisinage 3 cost : ", tmp.cost)
 
+    tmp = local_search(instance, solution, 2)
     if tmp.cost < best_solution.cost
         best_solution = tmp
     end
+
+    tmp = local_search(instance, solution, 3)
+    if tmp.cost < best_solution.cost
+        best_solution = tmp
+    end
+
     tmp = local_search(instance, solution, 4)
-    println("voisinage 4 cost : ", tmp.cost)
     if tmp.cost < best_solution.cost
         best_solution = tmp
     end
+
     if(best_solution.cost < solution.cost)
         return best_solution
     end
+    
     return best_solution
 end
 
@@ -321,24 +321,42 @@ end
 
 function bvnd(instance, initial_solution)
     lambda_max = 4  # nombre d'opérateurs de voisinage
-    Operators = 1:lambda_max
+    # Operators = 1:lambda_max
+    # S = deepcopy(initial_solution)
+    # improved = true
+
+    # while improved
+    #     improved = false
+    #     lambda = 1
+    #     while lambda <= lambda_max
+    #         # Générer un voisin avec l'opérateur lambda
+    #         S_prime = local_search(instance, S, lambda)
+    #         #On prend le premier voisin améliorant (déjà fait dans local_search)
+    #         if S_prime.cost < S.cost
+    #             S = S_prime
+    #             improved = true
+    #             lambda = 1  # retour au premier voisinage
+    #             continue
+    #         end
+    #         lambda += 1  # passer au voisinage suivant
+    #     end
+    # end
+    # return S
     S = deepcopy(initial_solution)
     improved = true
 
     while improved
         improved = false
-        lambda = 1
-        while lambda <= lambda_max
-            # Générer un voisin avec l'opérateur lambda
+        S_best = deepcopy(S)
+        for lambda in 1:lambda_max
             S_prime = local_search(instance, S, lambda)
-            #On prend le premier voisin améliorant (déjà fait dans local_search)
-            if S_prime.cost < S.cost
-                S = S_prime
-                improved = true
-                lambda = 1  # retour au premier voisinage
-                continue
+            if S_prime.cost < S_best.cost
+                S_best = S_prime
             end
-            lambda += 1  # passer au voisinage suivant
+        end
+        if S_best.cost < S.cost
+            S = S_best
+            improved = true
         end
     end
     return S
@@ -354,7 +372,7 @@ function bvns(instance, initial_solution, nmax)
         while k <= k_max
             # --- Shaking step avec acceptation conditionnelle ---
             S_shaken = generate_shaken(instance, S, k)
-            
+            S_shaken = repair_solution(instance, S_shaken, k)  # Réparer la solution si nécessaire
             # Recalculer le coût après shaking
             S_shaken.cost = calculate_cost(instance, S_shaken.assignment)
 
@@ -385,6 +403,7 @@ function gvns(instance, initial_solution, nmax, op_vnd)
         while k ≤ k_max
             # --- Shaking step (avec validation) ---
             S_shaken = generate_shaken(instance, S, k)
+            S_shaken = repair_solution(instance, S_shaken, k)  # Réparer la solution si nécessaire
             # --- Improvement procedure: VND ---
             S_improved = vnd(instance, S_shaken, op_vnd)
             # --- Sequential Neighborhood Change Step ---
@@ -446,5 +465,56 @@ function generate_shaken(instance, S, k; max_attempts=10)
     return S_shaken
 end
 
+# Cette fonction tente de réparer une solution en cas de violation partielle
+function repair_solution(instance, solution, movement_type)
+    repaired = deepcopy(solution)
+    if(movement_type == 1 || movement_type == 2) # TIM ou TEM
+        # 1. Réparer les violations de contrainte temporelle (3.8)
+        # Pour chaque transfert prévu, vérifier si le délai est respecté.
+        for i in 1:instance.n, j in 1:instance.n
+            if instance.f[i,j] > 0 && repaired.assignment[i] != 0 && repaired.assignment[j] != 0
+                # Si la contrainte n'est pas respectée
+                if instance.d[j] - instance.a[i] - instance.t[repaired.assignment[i], repaired.assignment[j]] < 0
+                    # On peut, par exemple, choisir de désassigner le camion j (ou i)
+                    # Ici, nous désassignons j, mais selon movement_type, vous pouvez adapter la stratégie.
+                    repaired.assignment[j] = 0
+                    # Puis, recalculer la capacité après cette modification.
+                    repaired.capacity = update_capacity(instance, repaired.capacity, j, false)
+                end
+            end
+        end
+    end
+    if(movement_type == 1)
+        # 2. Réparer les violations de capacité
+        # Pour chaque instant critique t, contrôler si la capacité est dépassée.
+        times = sort(union(instance.a, instance.d))
+        for t in times
+            cap_used = 0.0
+            trucks_present = Int[]
+            for i in 1:instance.n
+                if repaired.assignment[i] != 0 && instance.a[i] <= t <= instance.d[i]
+                    push!(trucks_present, i)
+                    # On peut estimer la contribution en sommant les expéditions entrantes/sortantes
+                    cap_used += sum(instance.f[i, j] for j in 1:instance.n)
+                end
+            end
+            sorted_trucks = sort(trucks_present, by = t -> instance.a[t])
+            if cap_used > instance.C
+                # Si la capacité est dépassée, désassigner le camion dont la contribution est relativement faible
+                if !isempty(trucks_present)
+                    truck_to_remove = sorted_trucks[1]
+                    repaired.assignment[truck_to_remove] = 0
+                    repaired.capacity = update_capacity(instance, repaired.capacity, truck_to_remove, false)
+                end
+            end
+        end
+    end
+
+    # Selon le mouvement (movement_type), d'autres réparations spécifiques peuvent être réalisées.
+    # Par exemple, pour un mouvement TEM, si l'échange a perturbé une zone horaire, vous pouvez réassigner
+    # l'un des camions via tiafdm, etc.
+    
+    return repaired
+end
 
 end # module
