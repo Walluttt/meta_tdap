@@ -42,7 +42,7 @@ function main()
         #solution = SolutionModule.local_search(instance, solution, 1)
         #solution = SolutionModule.bvnd(instance, solution)
         #solution = SolutionModule.bvns(instance, solution, 500)
-        solution = SolutionModule.gvns(instance, solution, 500, 2)
+        solution = SolutionModule.gvns(instance, solution, 20, 2)
     end
 
     println("\nSolution générée:")

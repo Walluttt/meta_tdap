@@ -321,45 +321,45 @@ end
 
 function bvnd(instance, initial_solution)
     lambda_max = 4  # nombre d'opérateurs de voisinage
-    # Operators = 1:lambda_max
-    # S = deepcopy(initial_solution)
-    # improved = true
-
-    # while improved
-    #     improved = false
-    #     lambda = 1
-    #     while lambda <= lambda_max
-    #         # Générer un voisin avec l'opérateur lambda
-    #         S_prime = local_search(instance, S, lambda)
-    #         #On prend le premier voisin améliorant (déjà fait dans local_search)
-    #         if S_prime.cost < S.cost
-    #             S = S_prime
-    #             improved = true
-    #             lambda = 1  # retour au premier voisinage
-    #             continue
-    #         end
-    #         lambda += 1  # passer au voisinage suivant
-    #     end
-    # end
-    # return S
+    Operators = 1:lambda_max
     S = deepcopy(initial_solution)
     improved = true
 
     while improved
         improved = false
-        S_best = deepcopy(S)
-        for lambda in 1:lambda_max
+        lambda = 1
+        while lambda <= lambda_max
+            # Générer un voisin avec l'opérateur lambda
             S_prime = local_search(instance, S, lambda)
-            if S_prime.cost < S_best.cost
-                S_best = S_prime
+            #On prend le premier voisin améliorant (déjà fait dans local_search)
+            if S_prime.cost < S.cost
+                S = S_prime
+                improved = true
+                lambda = 1  # retour au premier voisinage
+                continue
             end
-        end
-        if S_best.cost < S.cost
-            S = S_best
-            improved = true
+            lambda += 1  # passer au voisinage suivant
         end
     end
     return S
+    S = deepcopy(initial_solution)
+    improved = true
+
+    # while improved
+    #     improved = false
+    #     S_best = deepcopy(S)
+    #     for lambda in 1:lambda_max
+    #         S_prime = local_search(instance, S, lambda)
+    #         if S_prime.cost < S_best.cost
+    #             S_best = S_prime
+    #         end
+    #     end
+    #     if S_best.cost < S.cost
+    #         S = S_best
+    #         improved = true
+    #     end
+    # end
+    # return S
 end
 
 function bvns(instance, initial_solution, nmax)
@@ -494,18 +494,24 @@ function repair_solution(instance, solution, movement_type)
             for i in 1:instance.n
                 if repaired.assignment[i] != 0 && instance.a[i] <= t <= instance.d[i]
                     push!(trucks_present, i)
-                    # On peut estimer la contribution en sommant les expéditions entrantes/sortantes
                     cap_used += sum(instance.f[i, j] for j in 1:instance.n)
                 end
             end
             sorted_trucks = sort(trucks_present, by = t -> instance.a[t])
-            if cap_used > instance.C
-                # Si la capacité est dépassée, désassigner le camion dont la contribution est relativement faible
-                if !isempty(trucks_present)
-                    truck_to_remove = sorted_trucks[1]
-                    repaired.assignment[truck_to_remove] = 0
-                    repaired.capacity = update_capacity(instance, repaired.capacity, truck_to_remove, false)
+            while cap_used > instance.C && !isempty(sorted_trucks)
+                truck_to_remove = sorted_trucks[1]
+                repaired.assignment[truck_to_remove] = 0
+                repaired.capacity = update_capacity(instance, repaired.capacity, truck_to_remove, false)
+                # Recalculez la charge pour l'instant t
+                cap_used = 0.0
+                trucks_present = Int[]
+                for i in 1:instance.n
+                    if repaired.assignment[i] != 0 && instance.a[i] <= t <= instance.d[i]
+                        push!(trucks_present, i)
+                        cap_used += sum(instance.f[i, j] for j in 1:instance.n)
+                    end
                 end
+                sorted_trucks = sort(trucks_present, by = t -> instance.a[t])
             end
         end
     end
