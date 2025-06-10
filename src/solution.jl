@@ -325,41 +325,41 @@ function bvnd(instance, initial_solution)
     S = deepcopy(initial_solution)
     improved = true
 
-    while improved
-        improved = false
-        lambda = 1
-        while lambda <= lambda_max
-            # Générer un voisin avec l'opérateur lambda
-            S_prime = local_search(instance, S, lambda)
-            #On prend le premier voisin améliorant (déjà fait dans local_search)
-            if S_prime.cost < S.cost
-                S = S_prime
-                improved = true
-                lambda = 1  # retour au premier voisinage
-                continue
-            end
-            lambda += 1  # passer au voisinage suivant
-        end
-    end
-    return S
-    S = deepcopy(initial_solution)
-    improved = true
-
     # while improved
     #     improved = false
-    #     S_best = deepcopy(S)
-    #     for lambda in 1:lambda_max
+    #     lambda = 1
+    #     while lambda <= lambda_max
+    #         # Générer un voisin avec l'opérateur lambda
     #         S_prime = local_search(instance, S, lambda)
-    #         if S_prime.cost < S_best.cost
-    #             S_best = S_prime
+    #         #On prend le premier voisin améliorant (déjà fait dans local_search)
+    #         if S_prime.cost < S.cost
+    #             S = S_prime
+    #             improved = true
+    #             lambda = 1  # retour au premier voisinage
+    #             continue
     #         end
-    #     end
-    #     if S_best.cost < S.cost
-    #         S = S_best
-    #         improved = true
+    #         lambda += 1  # passer au voisinage suivant
     #     end
     # end
     # return S
+    # S = deepcopy(initial_solution)
+    # improved = true
+
+    while improved
+        improved = false
+        S_best = deepcopy(S)
+        for lambda in 1:lambda_max
+            S_prime = local_search(instance, S, lambda)
+            if S_prime.cost < S_best.cost
+                S_best = S_prime
+            end
+        end
+        if S_best.cost < S.cost
+            S = S_best
+            improved = true
+        end
+    end
+    return S
 end
 
 function bvns(instance, initial_solution, nmax)
@@ -401,9 +401,10 @@ function gvns(instance, initial_solution, nmax, op_vnd)
     while nbIterNoImprovement < nmax
         k = 1
         while k ≤ k_max
-            # --- Shaking step (avec validation) ---
+            #--- Shaking step (avec validation) ---
             S_shaken = generate_shaken(instance, S, k)
             S_shaken = repair_solution(instance, S_shaken, k)  # Réparer la solution si nécessaire
+
             # --- Improvement procedure: VND ---
             S_improved = vnd(instance, S_shaken, op_vnd)
             # --- Sequential Neighborhood Change Step ---
@@ -419,6 +420,65 @@ function gvns(instance, initial_solution, nmax, op_vnd)
     end
     return S
 end
+
+function ils(instance, initial_solution, nmax)
+    k_max = 4  # nombre d'opérateurs de shaking
+    S = deepcopy(initial_solution)
+    S = uvnd(instance, S)  # Amélioration initiale
+    nbIterNoImprovement = 0
+
+    while nbIterNoImprovement < nmax
+        k = 1
+        while k <= k_max
+            # --- Shaking step (avec validation) ---
+            S_shaken = generate_shaken(instance, S, k)
+            S_shaken = repair_solution(instance, S_shaken, k)  # Réparer la solution si nécessaire
+            S_improved = bvnd(instance, S_shaken)  # Amélioration locale
+
+            # --- Improvement procedure: VND ---
+            S_improved = bvnd(instance, S_shaken)
+            # --- Sequential Neighborhood Change Step ---
+            if S_improved.cost < S.cost
+                S = S_improved
+                k = 1   # retour au premier opérateur de shaking
+                nbIterNoImprovement = 0
+
+            else
+                k += 1  # passage à l'opérateur suivant dans le shaking
+            end
+        end
+        nbIterNoImprovement += 1
+    end
+    return S
+end
+
+function simulated_annealing(instance, initial_solution, T0, alpha, n_iter)
+    S = deepcopy(initial_solution)
+    best = deepcopy(S)
+    T = T0
+    for i in 1:n_iter
+        # Générer un voisin aléatoire en utilisant generate_shaken et repair_solution
+        op = rand(1:3)  # Vous pouvez ajuster l'intervalle selon vos opérateurs disponibiles
+        S_new = generate_shaken(instance, S, op)
+        S_new = repair_solution(instance, S_new, op)
+        # Amélioration locale pour raffiner le voisin
+        S_new = bvnd(instance, S_new)
+        
+        Δ = S_new.cost - S.cost
+        # Accepter le nouveau voisin s'il est meilleur ou avec une probabilité exp(-Δ/T)
+        if Δ < 0 || rand() < exp(-Δ / T)
+            S = S_new
+            if S.cost < best.cost
+                best = deepcopy(S)
+            end
+        end
+        
+        # Descente de température
+        T *= alpha
+    end
+    return best
+end
+
 
 function generate_shaken(instance, S, k; max_attempts=10)
     attempt = 0
@@ -475,8 +535,7 @@ function repair_solution(instance, solution, movement_type)
             if instance.f[i,j] > 0 && repaired.assignment[i] != 0 && repaired.assignment[j] != 0
                 # Si la contrainte n'est pas respectée
                 if instance.d[j] - instance.a[i] - instance.t[repaired.assignment[i], repaired.assignment[j]] < 0
-                    # On peut, par exemple, choisir de désassigner le camion j (ou i)
-                    # Ici, nous désassignons j, mais selon movement_type, vous pouvez adapter la stratégie.
+                    # On peut désassigne le camion j
                     repaired.assignment[j] = 0
                     # Puis, recalculer la capacité après cette modification.
                     repaired.capacity = update_capacity(instance, repaired.capacity, j, false)
@@ -515,11 +574,6 @@ function repair_solution(instance, solution, movement_type)
             end
         end
     end
-
-    # Selon le mouvement (movement_type), d'autres réparations spécifiques peuvent être réalisées.
-    # Par exemple, pour un mouvement TEM, si l'échange a perturbé une zone horaire, vous pouvez réassigner
-    # l'un des camions via tiafdm, etc.
-    
     return repaired
 end
 
