@@ -464,9 +464,9 @@ function simulated_annealing(instance, initial_solution, T0, alpha, n_iter)
         # Amélioration locale pour raffiner le voisin
         S_new = bvnd(instance, S_new)
         
-        Δ = S_new.cost - S.cost
+        delta = S_new.cost - S.cost
         # Accepter le nouveau voisin s'il est meilleur ou avec une probabilité exp(-Δ/T)
-        if Δ < 0 || rand() < exp(-Δ / T)
+        if delta < 0 || rand() < exp(-delta / T)
             S = S_new
             if S.cost < best.cost
                 best = deepcopy(S)
