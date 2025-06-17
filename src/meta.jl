@@ -30,20 +30,22 @@ function main()
     # instance_name = "didactic"
     
     path = "../data/singleObjective/singleObjectiveGelareh2016/"
-    instance_name = "data_12_4_0"
+    instance_name = "data_12_4_4"
     
     # Charger et afficher l’instance
     instance = load_and_show_instance(path, instance_name)
     solution = nothing
     time = @elapsed begin
         solution = SolutionModule.init_solution(instance)
-        println("assignement original : ", solution.assignment)
-        println("cost original : ", solution.cost)
-        #solution = SolutionModule.local_search(instance, solution, 1)
+        # println("assignement original : ", solution.assignment)
+        # println("coût original : ", SolutionModule.calculate_cost(instance, solution.assignment))
+        # solution = SolutionModule.local_search(instance, solution, 3)
+        # println("assignement nouveau : ", solution.assignment)
         #solution = SolutionModule.bvnd(instance, solution)
+        #solution = SolutionModule.uvnd(instance, solution)
         #solution = SolutionModule.bvns(instance, solution, 500)
-        #solution = SolutionModule.gvns(instance, solution, 200, 2)
-        solution = SolutionModule.ils(instance, solution, 200)
+        solution = SolutionModule.gvns(instance, solution, 200, 2)
+        #solution = SolutionModule.ils(instance, solution, 200)
         #solution = SolutionModule.simulated_annealing(instance, solution, 4000, 0.95, 100)
 
     end
@@ -57,7 +59,10 @@ function main()
     # for truck in sort(collect(keys(solution.assignment)), by = t -> instance.a[t])
     #     print("$truck => ", solution.assignment[truck], " ")
     # end
-    println("\nCoût total: ", solution.cost)
+    println("\nCoût total: ", SolutionModule.calculate_cost(instance, solution.assignment))
+    println("\nCoût total iterate: ", solution.cost)
+    println("\nDifférence :", SolutionModule.calculate_cost(instance, solution.assignment) - solution.cost)
+
     # for (t, cap) in sort(collect(solution.capacity))
     #     println("t = $t : capacité = $cap")
     # end
