@@ -15,11 +15,8 @@ function formulation_M(instance::Instance, δ::Matrix{Int64}, atr::Vector{Vector
     # create a model
     mod = Model(IPsolver)
 
-    # variables: 1 if truck i is assigned to dock k, 0 otherwise 
-    @variable(mod, y[1:n,1:m], Bin)
-
-    # variables: 1 if truck i is assigned to dock k and truck j to dock l, 0 otherwise
-    @variable(mod, z[1:n,1:n,1:m,1:m], Bin)
+    @variable(mod, 0 <= y[1:n, 1:m] <= 1)  # Relaxation de y[i,k]
+    @variable(mod, 0 <= z[1:n, 1:n, 1:m, 1:m] <= 1)  # Relaxation de z[i,j,k,l]
 
     # expression: total operational cost
     @expression(mod, cost, sum(c[k,l] * t[k,l] * z[i,j,k,l] for i=1:n, j=1:n, k=1:m, l=1:m))

@@ -7,65 +7,66 @@ mutable struct Sol
     cost::Int
     capacity::Dict{Int, Float64}  # t_r => capacité à ce moment
 end
-
 function init_solution(instance)
     assignment = Dict{Int, Int}()
     capacity = Dict{Int, Float64}()
-    # Tous les autres camions restent non assignés (valeur 0)
+    
+    # Initialisation : tous les camions non assignés (0)
     for truck in 1:instance.n
         assignment[truck] = 0
     end
-    cost = init_cost(instance)  # Initialiser le coût avec les pénalités
-
-    println("différence à l'initialisation: ", cost-calculate_cost(instance, assignment))
-
+    
+    cost = init_cost(instance)  # Coût initial avec pénalités
+    
+    # Initialisation des capacités
     times = sort(union(instance.a, instance.d))
-    for i in times
-        capacity[i] = 0.0
-    end
-    # Obtenir les indices des camions triés par heure d’arrivée
-    sorted_trucks = sortperm(instance.a)  # retourne les indices triés
-    dock = 1  # Premier dock à utiliser
-    #Assignation des premiers camions par ordre d'heure d'arrivée, aux premiers docks
-    for truck in sorted_trucks[1:instance.m]
-        assignment[truck] = dock
-        cost += update_cost(instance, assignment, truck, 0)  # Mettre à jour le coût de l'affectation
-        #cost = calculate_cost(instance, assignment) 
-        capacity = update_capacity(instance, capacity, truck, true)  # Initialiser la capacité du dock
-        dock+=1
+    for t in times
+        capacity[t] = 0.0
     end
 
-    #Assignation des autres camions par ordre d'heure d'arrivée, au premier dock pouvant les accepter
-    for truck in sorted_trucks[instance.m+1:instance.n]
-        dock = 1  # Réinitialiser le dock à 1 pour chaque nouveau camion
-        assignment, cost = tiafdm(instance, assignment, truck, cost)
-        capacity = update_capacity(instance, capacity, truck, true)  # Initialiser la capacité du dock
-        dock+=1
+    # Assignation des premiers camions aux docks (1 à m)
+    sorted_trucks = sortperm(instance.a)  # Tri par heure d'arrivée
+    dock = 1
+    for truck in sorted_trucks[1:min(instance.m, instance.n)]
+        old_dock = assignment[truck]
+        assignment[truck] = dock
+        cost += update_cost(instance, assignment, truck, old_dock)
+        dock += 1  # Passage au dock suivant
     end
-    #cost = calculate_cost(instance, assignment)
-    println("cost après affectation du dock: ", cost)
-    println("cost calculate_cost: ", calculate_cost(instance, assignment))
+
+    for truck in sorted_trucks[instance.m+1:end]
+        new_assignment, new_cost = tiafdm(instance, assignment, truck, cost)
+        assignment = new_assignment
+        cost = new_cost
+        # Mettez à jour la capacité après assignation
+        capacity = update_capacity(instance, capacity, truck, true)
+    end
+
+    # Vérification finale avec `calculate_cost`
+    println(abs(cost - calculate_cost(instance, assignment)))
+    @assert abs(cost - calculate_cost(instance, assignment)) < 1e-6 "Écart détecté !"
     return Sol(assignment, cost, capacity)
 end
-#fonction de calcul global du cout
+
 function calculate_cost(instance, assignment)
     total_cost = 0
     n = instance.n
-    m = instance.m
 
-    # Premier terme : pénalité
+    # Pénalité pour tous les flux
     for i in 1:n, j in 1:n
-            total_cost += instance.p[i, j] * instance.f[i, j]
+        total_cost += instance.p[i, j] * instance.f[i, j]
     end
-    # Deuxième terme : coût opérationnel
-    for i in 1:n, j in 1:n, k in 1:m, l in 1:m
-        if(assignment[i] == k && assignment[j] == l && j!=i)
+
+    # Coût opérationnel uniquement si flux > 0
+    for i in 1:n, j in 1:n
+        if assignment[i] != 0 && assignment[j] != 0  && (i!=j || (i==j && instance.f[i, j] > 0))
+            k = assignment[i]
+            l = assignment[j]
             total_cost += instance.c[k, l] * instance.t[k, l] - instance.p[i, j] * instance.f[i, j]
         end
     end
     return total_cost
 end
-
 #Fonction d'initialisation du coût qui va calculer toutes les pénalités
 function init_cost(instance)
     cost = 0
@@ -77,38 +78,70 @@ end
 
 #Fonction de mise à jour du coût suite à une (dés)affectation
 function update_cost(instance, assignment, truck, old_dock)
-# Mettre à jour le coût de l'affectation du camion truck à un nouveau dock
-    dock = assignment[truck]
-    new_cost = 0
-    #Coût d'affectation du camion truck à son dock actuel
-    if(dock > 0 && old_dock == 0)
-        for j in 1:instance.n
-            if assignment[j] != 0 && j != truck
-                # Coût opérationnel
-                new_cost += instance.c[dock, assignment[j]] * instance.t[dock, assignment[j]]
-                new_cost += instance.c[assignment[j], dock] * instance.t[assignment[j], dock] 
-                # On enlève les pénalités liées à l'ancienne non affectation
-                new_cost -= instance.p[truck, j] * instance.f[truck, j]
-                new_cost -= instance.p[j, truck] * instance.f[j, truck]
-            end
-        end
-    elseif(dock == 0 && old_dock > 0)
-        for j in 1:instance.n
-            if assignment[j] != 0 && j != truck
-                # Coût enlève le cout opérationnel
-                new_cost -= instance.c[old_dock, assignment[j]] * instance.t[old_dock, assignment[j]]
-                new_cost -= instance.c[assignment[j], old_dock] * instance.t[assignment[j], old_dock] 
+    delta = 0
+    n = instance.n
+    new_dock = assignment[truck]
 
-                # On ajoute les pénalités liées à la désaffectation
-                new_cost += instance.p[truck, j] * instance.f[truck, j]
-                new_cost += instance.p[j, truck] * instance.f[j, truck]
-
+    for j in 1:n
+         if j == truck
+            # Coût pour soi-même (flux interne du camion)
+            if instance.f[truck, truck] > 0
+                if old_dock != 0
+                    # Ancien: coût opérationnel, nouveau: pénalité
+                    prev_cost = instance.c[old_dock, old_dock] * instance.t[old_dock, old_dock] - instance.p[truck, truck] * instance.f[truck, truck]
+                else
+                    # Ancien: pénalité
+                    prev_cost = 0  # Déjà dans le coût de base
+                end
+                
+                if new_dock != 0
+                    # Nouveau: coût opérationnel
+                    new_cost = instance.c[new_dock, new_dock] * instance.t[new_dock, new_dock] - instance.p[truck, truck] * instance.f[truck, truck]
+                else
+                    # Nouveau: pénalité
+                    new_cost = 0  # Déjà dans le coût de base
+                end
+                
+                delta += new_cost - prev_cost
             end
+        else
+            old_j_dock = assignment[j]
+
+            # Coût précédent entre truck et j
+            if old_dock != 0 && old_j_dock != 0
+                prev_cost_ij = instance.c[old_dock, old_j_dock] * instance.t[old_dock, old_j_dock]
+            else
+                prev_cost_ij = instance.p[truck, j] * instance.f[truck, j]
+            end
+
+            # Nouveau coût entre truck et j
+            if new_dock != 0 && old_j_dock != 0
+                new_cost_ij = instance.c[new_dock, old_j_dock] * instance.t[new_dock, old_j_dock]
+            else
+                new_cost_ij = instance.p[truck, j] * instance.f[truck, j]
+            end
+
+            delta += new_cost_ij - prev_cost_ij
+
+            # Coût inverse entre j et truck
+            if old_j_dock != 0 && old_dock != 0
+                prev_cost_ji = instance.c[old_j_dock, old_dock] * instance.t[old_j_dock, old_dock]
+            else
+                prev_cost_ji = instance.p[j, truck] * instance.f[j, truck]
+            end
+
+            if old_j_dock != 0 && new_dock != 0
+                new_cost_ji = instance.c[old_j_dock, new_dock] * instance.t[old_j_dock, new_dock]
+            else
+                new_cost_ji = instance.p[j, truck] * instance.f[j, truck]
+            end
+
+            delta += new_cost_ji - prev_cost_ji
         end
     end
-    return new_cost
-end
 
+    return delta
+end
 function update_capacity(instance, capacity, truck, add::Bool)
     a = instance.a[truck]
     d = instance.d[truck]
@@ -116,7 +149,7 @@ function update_capacity(instance, capacity, truck, add::Bool)
     # Parcourir uniquement les périodes antérieures à d (départ du camion)
     for t in filter(x -> a <= x < d, keys(capacity))
         # Camions déjà présents à t (autres que `truck`)
-        present_trucks = [j for j in 1:instance.n if j != truck && instance.a[j] <= t <= instance.d[j]]
+        present_trucks = [j for j in 1:instance.n if j != truck && (instance.a[j] <= t || t <= instance.d[j])]
         
         # Contribution du camion à la capacité à t :
         delta = 0.0
@@ -142,7 +175,6 @@ function local_search(instance, solution, op)
             for i in 1:instance.m
                 new_assignment, new_capacity, new_cost = tim(instance, solution, t, i)
                 if(is_capacity_respected(new_capacity, instance.C) && time_constraint(instance, new_assignment))
-                    new_cost += solution.cost
                     new_solution = Sol(new_assignment, new_cost, new_capacity)
 
                     # Vérifie si le voisin est meilleur
@@ -211,10 +243,115 @@ function local_search(instance, solution, op)
     return best_solution
 end
 
+function local_searchBI(instance, solution, op)
+    best_solution = deepcopy(solution)
+    best_improvement = 0  # Suivre la meilleure amélioration trouvée
+    
+    if op == 1 # (TIM)
+        for t in 1:instance.n 
+            for i in 1:instance.m
+                # Éviter de tester la même affectation
+                if solution.assignment[t] == i
+                    continue
+                end
+                
+                new_assignment, new_capacity, new_cost = tim(instance, solution, t, i)
+                if is_capacity_respected(new_capacity, instance.C) && time_constraint(instance, new_assignment)
+                    new_solution = Sol(new_assignment, new_cost, new_capacity)
+                    
+                    # Calculer l'amélioration
+                    improvement = solution.cost - new_solution.cost
+                    
+                    # Garder seulement si c'est la meilleure amélioration
+                    if improvement > best_improvement
+                        best_solution = new_solution
+                        best_improvement = improvement
+                    end
+                end
+            end
+        end
+    end
+    
+    if op == 2 # Truck Exchange Move (TEM)
+        for t1 in 1:instance.n-1
+            for t2 in t1+1:instance.n
+                # Éviter les échanges inutiles (même dock)
+                if solution.assignment[t1] == solution.assignment[t2]
+                    continue
+                end
+                
+                if instance.a[t1] > instance.d[t2] || instance.a[t2] > instance.d[t1]
+                    new_assignment, delta_cost = tem(instance, solution.assignment, t1, t2, solution.capacity)
+                    
+                    if time_constraint(instance, new_assignment)
+                        new_cost = solution.cost + delta_cost
+                        new_solution = Sol(new_assignment, new_cost, solution.capacity)
+                        
+                        # Calculer l'amélioration
+                        improvement = solution.cost - new_solution.cost
+                        
+                        if improvement > best_improvement
+                            best_solution = new_solution
+                            best_improvement = improvement
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    if op == 3  # Dock Exchange Move (DEM)
+        for i in 1:instance.m-1
+            for j in i+1:instance.m
+                new_assignment, delta_cost = dem(instance, solution, i, j)
+                new_cost = solution.cost + delta_cost
+                new_solution = Sol(new_assignment, new_cost, solution.capacity)
+                
+                # Calculer l'amélioration
+                improvement = solution.cost - new_solution.cost
+                
+                if improvement > best_improvement
+                    best_solution = new_solution
+                    best_improvement = improvement
+                end
+            end
+        end
+    end
+    
+    if op == 4 # (TIAFDM)
+        for t in 1:instance.n
+            # Éviter de tester si déjà assigné au meilleur dock possible
+            if solution.assignment[t] != 0
+                continue
+            end
+            
+            new_assignment, new_cost = tiafdm(instance, solution.assignment, t, solution.cost)
+            
+            if new_assignment[t] != 0 && time_constraint(instance, new_assignment)
+                new_capacity = update_capacity(instance, solution.capacity, t, true)
+                
+                if is_capacity_respected(new_capacity, instance.C)
+                    new_solution = Sol(new_assignment, new_cost, new_capacity)
+                    
+                    # Calculer l'amélioration
+                    improvement = solution.cost - new_solution.cost
+                    
+                    if improvement > best_improvement
+                        best_solution = new_solution
+                        best_improvement = improvement
+                    end
+                end
+            end
+        end
+    end
+    
+    return best_solution
+end
 function dem(instance, solution, i, j)
     new_assignment = deepcopy(solution.assignment)
-    new_cost = 0
-    for (truck, dock) in pairs(new_assignment)
+    new_cost = solution.cost
+    for truck in 1:instance.n
+        dock = new_assignment[truck]
         if dock == i
             new_assignment[truck] = 0
             new_cost += update_cost(instance, new_assignment, truck, i)
@@ -227,7 +364,6 @@ function dem(instance, solution, i, j)
             new_cost += update_cost(instance, new_assignment, truck, 0)  
         end
     end
-
     return new_assignment, new_cost
 
 end
@@ -262,10 +398,10 @@ end
 function tim(instance, solution, truck, i)
     new_assignment = deepcopy(solution.assignment)
     new_capacity = deepcopy(solution.capacity)
-    new_cost = 0
+    new_cost = solution.cost
     assigned_trucks_at_i = [t for (t, dock) in new_assignment if dock == i]
     for t in assigned_trucks_at_i
-        if instance.d[t] > instance.a[truck]
+        if max(instance.a[truck], instance.a[t]) < min(instance.d[truck], instance.d[t])
             new_capacity = update_capacity(instance, new_capacity, t, false)  # Retirer la contribution de t
             old_dock = new_assignment[t]
             new_assignment[t] = 0  # Conflit détecté, retour immédiat
@@ -307,7 +443,7 @@ function isValidAssignment(instance, assignment, truck, i)
     assigned_trucks_at_i = [t for (t, dock) in pairs(assignment) if dock == i]
 
     for t in assigned_trucks_at_i
-        if instance.d[t] > instance.a[truck]
+        if instance.d[t] > instance.a[truck] && instance.d[truck] > instance.a[t]
             return false  # Conflit détecté, retour immédiat
         end
     end
@@ -335,17 +471,6 @@ function is_capacity_respected(new_capacity, capacity)
         end
     end
     return true
-end
-
-function emptyDock(assignment, i) #Shaking move
-    new_assignment = deepcopy(assignment)
-    assigned_trucks_at_i = [t for (t, dock) in pairs(assignment) if dock == i]
-
-    for t in assigned_trucks_at_i
-        new_assignment[t]=0
-    end
-
-    return new_assignment
 end
 
 
@@ -387,42 +512,29 @@ end
 
 function bvnd(instance, initial_solution)
     lambda_max = 4  # nombre d'opérateurs de voisinage
-    Operators = 1:lambda_max
     S = deepcopy(initial_solution)
-    improved = true
+    improved = false  # Commencer par true pour entrer dans la boucle
 
-    # while improved
-    #     improved = false
-    #     lambda = 1
-    #     while lambda <= lambda_max
-    #         # Générer un voisin avec l'opérateur lambda
-    #         S_prime = local_search(instance, S, lambda)
-    #         #On prend le premier voisin améliorant (déjà fait dans local_search)
-    #         if S_prime.cost < S.cost
-    #             S = S_prime
-    #             improved = true
-    #             lambda = 1  # retour au premier voisinage
-    #             continue
-    #         end
-    #         lambda += 1  # passer au voisinage suivant
-    #     end
-    # end
-    # return S
-    # S = deepcopy(initial_solution)
-    # improved = true
-
-    while improved
+    # Simulation do-while : exécuter au moins une fois
+    while true
         improved = false
-        S_best = deepcopy(S)
-        for lambda in 1:lambda_max
-            S_prime = local_search(instance, S, lambda)
-            if S_prime.cost < S_best.cost
-                S_best = S_prime
+        lambda = 1
+        
+        while lambda <= lambda_max
+            S_prime = local_searchBI(instance, S, lambda)
+            
+            if S_prime.cost < S.cost
+                S = S_prime
+                improved = true
+                lambda = 1  # Retour au premier voisinage
+            else
+                lambda += 1
             end
         end
-        if S_best.cost < S.cost
-            S = S_best
-            improved = true
+        
+        # Condition de sortie (équivalent à while improved)
+        if !improved
+            break
         end
     end
     return S
@@ -439,7 +551,7 @@ function bvns(instance, initial_solution, nmax)
             # --- Shaking step avec acceptation conditionnelle ---
             S_shaken = generate_shaken(instance, S, k)
             S_shaken, cost = repair_solution(instance, S_shaken, k)  # Réparer la solution si nécessaire
-            S_shaken.cost += cost  # Mettre à jour le coût après réparation
+            S_shaken.cost = cost  # Mettre à jour le coût après réparation
 
             # --- Amélioration locale ---
             S_local = local_search(instance, S_shaken, k)
@@ -462,14 +574,19 @@ function gvns(instance, initial_solution, nmax, op_vnd)
     k_max = 4  # nombre d'opérateurs de shaking
     S = deepcopy(initial_solution)
     nbIterNoImprovement = 0
-
+    cost=0
     while nbIterNoImprovement < nmax
         k = 1
         while k ≤ k_max
             #--- Shaking step (avec validation) ---
             S_shaken = generate_shaken(instance, S, k)
+            #println("cout shaking:", cost)
+
             S_shaken, cost = repair_solution(instance, S_shaken, k)  # Réparer la solution si nécessaire
-            S_shaken.cost += cost  # Mettre à jour le coût après réparation
+            S_shaken.cost = cost  # Mettre à jour le coût après réparation
+            # println("cout réparé:", cost)
+            # @assert abs(cost - calculate_cost(instance, S_shaken.assignment)) < 1e-6 "Écart détecté !"
+
             # --- Improvement procedure: VND ---
             S_improved = vnd(instance, S_shaken, op_vnd)
             # --- Sequential Neighborhood Change Step ---
@@ -497,7 +614,10 @@ function ils(instance, initial_solution, nmax)
         while k <= k_max
             # --- Shaking step (avec validation) ---
             S_shaken = generate_shaken(instance, S, k)
-            S_shaken = repair_solution(instance, S_shaken, k)  # Réparer la solution si nécessaire
+            S_shaken, cost = repair_solution(instance, S_shaken, k)  # Réparer la solution si nécessaire
+            S_shaken.cost = cost  # Mettre à jour le coût après réparation
+            # println("cout réparé:", cost)
+            # @assert abs(cost - calculate_cost(instance, S_shaken.assignment)) < 1e-6 "Écart détecté !"
 
             # --- Improvement procedure: VND ---
             S_improved = bvnd(instance, S_shaken)
@@ -517,7 +637,34 @@ function ils(instance, initial_solution, nmax)
 end
 
 
+function simulated_annealing(instance, initial_solution, T0, alpha, n_iter)
+    S = deepcopy(initial_solution)
+    best = deepcopy(S)
+    T = T0
+    for i in 1:n_iter
+        # Générer un voisin aléatoire en utilisant generate_shaken et repair_solution
+        op = rand(1:3)  # Vous pouvez ajuster l'intervalle selon vos opérateurs disponibiles
+        S_shaken = generate_shaken(instance, S, op)
+        S_shaken, cost = repair_solution(instance, S_shaken, op)
+        S_shaken.cost = cost  # Mettre à jour le coût après réparation
 
+        # Amélioration locale pour raffiner le voisin
+        S_shaken = bvnd(instance, S_shaken)
+        
+        delta = S_shaken.cost - S.cost
+        # Accepter le nouveau voisin s'il est meilleur ou avec une probabilité exp(-Δ/T)
+        if delta < 0 || rand() < exp(-delta / T)
+            S = S_shaken
+            if S.cost < best.cost
+                best = deepcopy(S)
+            end
+        end
+        
+        # Descente de température
+        T *= alpha
+    end
+    return best
+end
 
 function generate_shaken(instance, S, k; max_attempts=10)
     attempt = 0
@@ -531,7 +678,7 @@ function generate_shaken(instance, S, k; max_attempts=10)
             t = rand(1:instance.n)
             dock = rand(1:instance.m)
             shaken_assignment, shaken_capacity, new_cost = tim(instance, S, t, dock)
-            S_shaken.cost += new_cost
+            S_shaken.cost = new_cost
             S_shaken.assignment = shaken_assignment
             S_shaken.capacity = shaken_capacity
         elseif k == 2
@@ -543,19 +690,16 @@ function generate_shaken(instance, S, k; max_attempts=10)
         elseif k == 3
             # DEM : échange aléatoire de deux quais
             i, j = rand(1:instance.m, 2)
-
             S_shaken.assignment, new_cost = dem(instance, S, i, j)
-            S_shaken.cost += new_cost
+            S_shaken.cost = new_cost
             # Pour DEM, nous gardons la capacité initiale
         elseif k == 4
             # TIAFDM : affectation aléatoire d'un camion
             t = rand(1:instance.n)
             S_shaken.assignment, S_shaken.cost = tiafdm(instance, S.assignment, t, S.cost)
-            # Ici, on suppose que S.capacity reste telle quelle.
+            S_shaken.capacity = update_capacity(instance, S_shaken.capacity, t, true)  # Mettre à jour la capacité après affectation
         end
         # Recalculer le coût après shaking
-        #S_shaken.cost = calculate_cost(instance, S_shaken.assignment)
-        # Vérifier la solution générée (contraintes temporelles, capacité, etc.)
         if time_constraint(instance, S_shaken.assignment) && is_capacity_respected(S_shaken.capacity, instance.C)
             valid = true
         else
@@ -607,7 +751,7 @@ function repair_solution(instance, solution, movement_type)
             sorted_trucks = sort(trucks_present, by = t -> instance.a[t])
             while cap_used > instance.C && !isempty(sorted_trucks)
                 truck_to_remove = sorted_trucks[1]
-                old_dock=assignment[truck_to_remove]
+                old_dock = assignment[truck_to_remove]
                 repaired.assignment[truck_to_remove] = 0
                 new_cost += update_cost(instance, repaired.assignment, truck_to_remove, old_dock) 
 
@@ -625,7 +769,18 @@ function repair_solution(instance, solution, movement_type)
             end
         end
     end
+    #new_cost=calculate_cost(instance, repaired.assignment)
     return repaired, new_cost
+end
+
+#Vérifie si l'instance est full mesh
+function isFullMesh(instance)
+    for j in 1:instance.n
+        if instance.f[j, j] > 0
+            return true
+        end
+    end
+    return false
 end
 
 end # module
